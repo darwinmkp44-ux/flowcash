@@ -2,5 +2,5 @@
   "name": "FlowCash",
   "description": "Premium FlowCash mobile personal finance app specialized with MZN (Metical) Mozambique currency, built with beautiful responsive layouts.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

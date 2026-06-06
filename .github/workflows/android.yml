@@ -33,14 +33,6 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Create environment config
-        run: |
-          if [ -f .env.example ]; then
-            cp .env.example .env
-          else
-            echo "API_KEY=dummy_value" > .env
-          fi
-
       - name: Generate dynamic signing keystore
         run: |
           keytool -genkey -v \
@@ -78,20 +70,19 @@ jobs:
           name: flowcash-release-apk
           path: app/build/outputs/apk/release/app-release.apk
 
-      - name: Create GitHub Release (Only on Tags)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: app/build/outputs/apk/release/app-release.apk
-          name: Release ${{ github.ref_name }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && format('Release {0}', github.ref_name) || format('Build #{0}', github.run_number) }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('build-{0}', github.run_number) }}
           body: |
-            Nova versão do FlowCash compilada com sucesso via pipeline CI/CD!
+            ${{ startsWith(github.ref, 'refs/tags/v') && format('Nova versão {0} do FlowCash!', github.ref_name) || 'Build automático gerado a partir do branch **main**.' }}
             
-            ### Alterações
-            - Remoção completa de dados mockados e uso de dados 100% dinâmicos.
-            - Perfil de usuário editável e persistido localmente via SharedPreferences.
-            - Gráficos e estatísticas em tempo real com base na base de dados Room.
+            ### APK
+            - Anexado automaticamente pela pipeline CI/CD.
+            - Apenas instalar no dispositivo Android (minSdk 24).
           draft: false
-          prerelease: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
