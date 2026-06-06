@@ -1,0 +1,97 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Create environment config
+        run: |
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          else
+            echo "API_KEY=dummy_value" > .env
+          fi
+
+      - name: Generate dynamic signing keystore
+        run: |
+          keytool -genkey -v \
+            -keystore my-upload-key.jks \
+            -alias upload \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=FlowCash, OU=Development, O=FlowCash, L=Maputo, S=Maputo, C=MZ" \
+            -storepass mypassword \
+            -keypass mypassword
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.12
+
+      - name: Run Unit & Robolectric Tests
+        run: gradle test
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
+          STORE_PASSWORD: mypassword
+          KEY_PASSWORD: mypassword
+
+      - name: Build Release APK
+        run: gradle assembleRelease
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
+          STORE_PASSWORD: mypassword
+          KEY_PASSWORD: mypassword
+
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flowcash-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Create GitHub Release (Only on Tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/app-release.apk
+          name: Release ${{ github.ref_name }}
+          body: |
+            Nova versão do FlowCash compilada com sucesso via pipeline CI/CD!
+            
+            ### Alterações
+            - Remoção completa de dados mockados e uso de dados 100% dinâmicos.
+            - Perfil de usuário editável e persistido localmente via SharedPreferences.
+            - Gráficos e estatísticas em tempo real com base na base de dados Room.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

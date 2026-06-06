@@ -1,0 +1,172 @@
+package com.example
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.*
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import com.example.ui.FinanceViewModel
+import com.example.ui.screens.*
+import com.example.ui.theme.MyApplicationTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        // Initialize the central FinanceViewModel
+        val viewModel = ViewModelProvider(this)[FinanceViewModel::class.java]
+
+        setContent {
+            var isDarkMode by remember { mutableStateOf(false) }
+            val systemDark = isSystemInDarkTheme()
+            
+            // Sync with system default setting on first load
+            LaunchedEffect(Unit) {
+                isDarkMode = systemDark
+            }
+
+            MyApplicationTheme(darkTheme = isDarkMode) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppOrchestrator(
+                        viewModel = viewModel,
+                        isDarkMode = isDarkMode,
+                        onToggleDarkMode = { isDarkMode = it }
+                    )
+                }
+            }
+        }
+    }
+}
+
+enum class BottomNavTab(
+    val route: String,
+    val title: String,
+    val activeIcon: ImageVector,
+    val inactiveIcon: ImageVector
+) {
+    HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
+    HISTORY("history", "Histórico", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
+    ANALYTICS("analytics", "Estatísticas", Icons.Filled.Leaderboard, Icons.Outlined.Leaderboard),
+    GOALS("goals", "Metas", Icons.Filled.TrackChanges, Icons.Outlined.TrackChanges),
+    PROFILE("profile", "Perfil", Icons.Filled.Person, Icons.Outlined.Person)
+}
+
+@Composable
+fun AppOrchestrator(
+    viewModel: FinanceViewModel,
+    isDarkMode: Boolean,
+    onToggleDarkMode: (Boolean) -> Unit
+) {
+    var activeTab by remember { mutableStateOf(BottomNavTab.HOME) }
+    var isAddingTransaction by remember { mutableStateOf(false) }
+
+    Scaffold(
+        bottomBar = {
+            if (!isAddingTransaction) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.testTag("bottom_nav_bar")
+                ) {
+                    BottomNavTab.entries.forEach { tab ->
+                        val isSelected = activeTab == tab
+                        NavigationBarItem(
+                            selected = isSelected,
+                            onClick = { activeTab = tab },
+                            icon = {
+                                Icon(
+                                    imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                                    contentDescription = tab.title,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tab.title,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            ),
+                            modifier = Modifier.testTag("nav_item_${tab.route}")
+                        )
+                    }
+                }
+            }
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = if (isAddingTransaction) 0.dp else innerPadding.calculateBottomPadding())
+        ) {
+            // Screen state controller
+            if (isAddingTransaction) {
+                NewTransactionScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { isAddingTransaction = false }
+                )
+            } else {
+                when (activeTab) {
+                    BottomNavTab.HOME -> {
+                        HomeScreen(
+                            viewModel = viewModel,
+                            onNavigateToNewTransaction = { isAddingTransaction = true },
+                            onNavigateToHistory = { activeTab = BottomNavTab.HISTORY }
+                        )
+                    }
+                    BottomNavTab.HISTORY -> {
+                        HistoryScreen(
+                            viewModel = viewModel
+                        )
+                    }
+                    BottomNavTab.ANALYTICS -> {
+                        AnalyticsScreen(
+                            viewModel = viewModel
+                        )
+                    }
+                    BottomNavTab.GOALS -> {
+                        GoalsScreen(
+                            viewModel = viewModel
+                        )
+                    }
+                    BottomNavTab.PROFILE -> {
+                        ProfileScreen(
+                            viewModel = viewModel,
+                            isDarkMode = isDarkMode,
+                            onToggleDarkMode = onToggleDarkMode
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Simple extension helper for MaterialTheme color customization inside compose blocks
+@Composable
+fun ColorScheme.withAlpha(alpha: Float): Color {
+    return this.onSurface.copy(alpha = alpha)
+}
