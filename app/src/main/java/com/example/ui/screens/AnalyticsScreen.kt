@@ -484,6 +484,37 @@ fun AnalyticsScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
+                        // Dynamic pie chart calculation based on category expenses
+                        val expensesList = transactions.filter { it.type == "DESPESA" }
+                        val totalExpenseAmount = expensesList.sumOf { it.amount }
+
+                        val categoryAmounts = mapOf(
+                            "Compras" to expensesList.filter { it.category.equals("Compras", ignoreCase = true) }.sumOf { it.amount },
+                            "Alimentação" to expensesList.filter { it.category.equals("Alimentação", ignoreCase = true) }.sumOf { it.amount },
+                            "Transporte" to expensesList.filter { it.category.equals("Transporte", ignoreCase = true) }.sumOf { it.amount },
+                            "Outros" to expensesList.filter { !it.category.equals("Compras", ignoreCase = true) &&
+                                                              !it.category.equals("Alimentação", ignoreCase = true) &&
+                                                              !it.category.equals("Transporte", ignoreCase = true) }.sumOf { it.amount }
+                        )
+
+                        val comprasPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Compras"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
+                        val alimentacaoPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Alimentação"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
+                        val transportePercent = if (totalExpenseAmount > 0) ((categoryAmounts["Transporte"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
+                        val outrosPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Outros"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
+
+                        val categoriesMix = listOf(
+                            Pair("Compras", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", comprasPercent * 100) else "0%"),
+                            Pair("Alimentação", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", alimentacaoPercent * 100) else "0%"),
+                            Pair("Transporte", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", transportePercent * 100) else "0%"),
+                            Pair("Outros", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", outrosPercent * 100) else "0%")
+                        )
+                        val legendColors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.outlineVariant,
+                            MaterialTheme.colorScheme.secondaryContainer
+                        )
+
                         // Custom Styled Circular Ring Pie Canvas Chart
                         Box(
                             modifier = Modifier.size(170.dp),
@@ -495,24 +526,6 @@ fun AnalyticsScreen(
                             val color4 = MaterialTheme.colorScheme.secondaryContainer // Outros
 
                             val strokeWidthVal = 14.dp
-
-                            // Dynamic pie chart calculation based on category expenses
-                            val expensesList = transactions.filter { it.type == "DESPESA" }
-                            val totalExpenseAmount = expensesList.sumOf { it.amount }
-
-                            val categoryAmounts = mapOf(
-                                "Compras" to expensesList.filter { it.category.equals("Compras", ignoreCase = true) }.sumOf { it.amount },
-                                "Alimentação" to expensesList.filter { it.category.equals("Alimentação", ignoreCase = true) }.sumOf { it.amount },
-                                "Transporte" to expensesList.filter { it.category.equals("Transporte", ignoreCase = true) }.sumOf { it.amount },
-                                "Outros" to expensesList.filter { !it.category.equals("Compras", ignoreCase = true) &&
-                                                                  !it.category.equals("Alimentação", ignoreCase = true) &&
-                                                                  !it.category.equals("Transporte", ignoreCase = true) }.sumOf { it.amount }
-                            )
-
-                            val comprasPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Compras"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
-                            val alimentacaoPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Alimentação"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
-                            val transportePercent = if (totalExpenseAmount > 0) ((categoryAmounts["Transporte"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
-                            val outrosPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Outros"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
 
                             val comprasSweep = comprasPercent * 360f
                             val alimentacaoSweep = alimentacaoPercent * 360f
@@ -529,14 +542,12 @@ fun AnalyticsScreen(
                             }
 
                             Canvas(modifier = Modifier.fillMaxSize()) {
-                                // Draw grey background ring
                                 drawCircle(
                                     color = Color(0xFFF1F5F9),
                                     style = Stroke(width = strokeWidthVal.toPx())
                                 )
 
                                 if (totalExpenseAmount > 0) {
-                                    // Draw Compras arc
                                     drawArc(
                                         color = color1,
                                         startAngle = -90f,
@@ -545,7 +556,6 @@ fun AnalyticsScreen(
                                         style = Stroke(width = strokeWidthVal.toPx(), cap = StrokeCap.Round)
                                     )
 
-                                    // Draw Alimentação arc
                                     drawArc(
                                         color = color2,
                                         startAngle = -90f + comprasSweep,
@@ -554,7 +564,6 @@ fun AnalyticsScreen(
                                         style = Stroke(width = strokeWidthVal.toPx(), cap = StrokeCap.Round)
                                     )
 
-                                    // Draw Transporte arc
                                     drawArc(
                                         color = color3,
                                         startAngle = -90f + comprasSweep + alimentacaoSweep,
@@ -563,7 +572,6 @@ fun AnalyticsScreen(
                                         style = Stroke(width = strokeWidthVal.toPx(), cap = StrokeCap.Round)
                                     )
 
-                                    // Draw Outros arc
                                     drawArc(
                                         color = color4,
                                         startAngle = -90f + comprasSweep + alimentacaoSweep + transporteSweep,
@@ -574,7 +582,6 @@ fun AnalyticsScreen(
                                 }
                             }
 
-                            // Centered label inside Pie Chart Ring
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -593,20 +600,6 @@ fun AnalyticsScreen(
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
-
-                        // Category Labels Legend
-                        val categoriesMix = listOf(
-                            Pair("Compras", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", comprasPercent * 100) else "0%"),
-                            Pair("Alimentação", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", alimentacaoPercent * 100) else "0%"),
-                            Pair("Transporte", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", transportePercent * 100) else "0%"),
-                            Pair("Outros", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", outrosPercent * 100) else "0%")
-                        )
-                        val legendColors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.outlineVariant,
-                            MaterialTheme.colorScheme.secondaryContainer
-                        )
 
                         Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
