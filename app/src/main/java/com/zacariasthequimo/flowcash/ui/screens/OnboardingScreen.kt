@@ -1,9 +1,11 @@
 package com.zacariasthequimo.flowcash.ui.screens
 
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -228,6 +231,16 @@ fun OnboardingScreen(
 
                 Spacer(Modifier.height(40.dp))
 
+                val photoBitmap = remember(photoUri) {
+                    photoUri?.let { uri ->
+                        try {
+                            context.contentResolver.openInputStream(uri)?.use { input ->
+                                BitmapFactory.decodeStream(input)?.asImageBitmap()
+                            }
+                        } catch (_: Exception) { null }
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .size(140.dp)
@@ -237,9 +250,9 @@ fun OnboardingScreen(
                         .clickable { pickPhotoLauncher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (photoUri != null) {
-                        androidx.compose.foundation.Image(
-                            painter = androidx.compose.ui.res.painterResource(android.R.drawable.ic_menu_gallery),
+                    if (photoBitmap != null) {
+                        Image(
+                            bitmap = photoBitmap,
                             contentDescription = "Foto",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
