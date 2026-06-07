@@ -12,5 +12,6 @@ data class Product(
     val cost: Double = 0.0,
     val stockQty: Int = 0,
     val category: String = "",
+    val photoPath: String = "",
     val createdAt: Long = System.currentTimeMillis()
 )

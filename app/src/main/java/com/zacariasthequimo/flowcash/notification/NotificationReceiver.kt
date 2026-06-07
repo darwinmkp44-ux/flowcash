@@ -13,32 +13,37 @@ class NotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
+        val pendingResult = goAsync()
         val appContext = context.applicationContext
 
         CoroutineScope(Dispatchers.IO).launch {
-            val database = AppDatabase.getDatabase(appContext)
-            val transactions = database.transactionDao().getAllTransactionsSync()
+            try {
+                val database = AppDatabase.getDatabase(appContext)
+                val transactions = database.transactionDao().getAllTransactionsSync()
 
-            when (action) {
-                ACTION_DAILY_REMINDER -> {
-                    NotificationHelper.showDailyReminder(appContext)
+                when (action) {
+                    ACTION_DAILY_REMINDER -> {
+                        NotificationHelper.showDailyReminder(appContext)
+                    }
+                    ACTION_WEEKLY_SUMMARY -> {
+                        val now = System.currentTimeMillis()
+                        val weekAgo = now - 7L * 24 * 3600 * 1000
+                        val weekTx = transactions.filter { it.date >= weekAgo }
+                        val inc = weekTx.filter { it.type == "RECEITA" }.sumOf { it.amount }
+                        val exp = weekTx.filter { it.type == "DESPESA" }.sumOf { it.amount }
+                        NotificationHelper.showWeeklySummary(appContext, inc, exp, inc - exp)
+                    }
+                    ACTION_MONTHLY_SUMMARY -> {
+                        val now = System.currentTimeMillis()
+                        val monthAgo = now - 30L * 24 * 3600 * 1000
+                        val monthTx = transactions.filter { it.date >= monthAgo }
+                        val inc = monthTx.filter { it.type == "RECEITA" }.sumOf { it.amount }
+                        val exp = monthTx.filter { it.type == "DESPESA" }.sumOf { it.amount }
+                        NotificationHelper.showMonthlySummary(appContext, inc, exp, inc - exp)
+                    }
                 }
-                ACTION_WEEKLY_SUMMARY -> {
-                    val now = System.currentTimeMillis()
-                    val weekAgo = now - 7L * 24 * 3600 * 1000
-                    val weekTx = transactions.filter { it.date >= weekAgo }
-                    val inc = weekTx.filter { it.type == "RECEITA" }.sumOf { it.amount }
-                    val exp = weekTx.filter { it.type == "DESPESA" }.sumOf { it.amount }
-                    NotificationHelper.showWeeklySummary(appContext, inc, exp, inc - exp)
-                }
-                ACTION_MONTHLY_SUMMARY -> {
-                    val now = System.currentTimeMillis()
-                    val monthAgo = now - 30L * 24 * 3600 * 1000
-                    val monthTx = transactions.filter { it.date >= monthAgo }
-                    val inc = monthTx.filter { it.type == "RECEITA" }.sumOf { it.amount }
-                    val exp = monthTx.filter { it.type == "DESPESA" }.sumOf { it.amount }
-                    NotificationHelper.showMonthlySummary(appContext, inc, exp, inc - exp)
-                }
+            } finally {
+                pendingResult.finish()
             }
         }
     }

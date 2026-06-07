@@ -86,9 +86,9 @@ class BusinessViewModel(application: Application) : FinanceViewModel(application
         }
     }
 
-    fun addProduct(name: String, description: String, price: Double, cost: Double, stockQty: Int, category: String) {
+    fun addProduct(name: String, description: String, price: Double, cost: Double, stockQty: Int, category: String, photoPath: String = "") {
         viewModelScope.launch {
-            productDao.insert(Product(name = name, description = description, price = price, cost = cost, stockQty = stockQty, category = category))
+            productDao.insert(Product(name = name, description = description, price = price, cost = cost, stockQty = stockQty, category = category, photoPath = photoPath))
         }
     }
 

@@ -1,10 +1,17 @@
 package com.zacariasthequimo.flowcash.ui.screens
 
-import androidx.compose.foundation.BorderStroke
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -14,13 +21,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zacariasthequimo.flowcash.data.entity.Product
 import com.zacariasthequimo.flowcash.ui.BusinessViewModel
+import java.io.File
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -81,25 +93,7 @@ fun ProductScreen(viewModel: BusinessViewModel) {
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(products, key = { it.id }) { product ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().clickable { selectedProduct = product },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(product.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Spacer(Modifier.height(2.dp))
-                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                        Text("${nf.format(product.price)} MT", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                        Text("Stock: ${product.stockQty}", style = MaterialTheme.typography.bodySmall, color = if (product.stockQty <= 5) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
-                            }
-                        }
+                        ProductCard(product = product, nf = nf, onClick = { selectedProduct = product })
                     }
                 }
             }
@@ -108,9 +102,10 @@ fun ProductScreen(viewModel: BusinessViewModel) {
 
     if (showAddDialog) {
         AddProductDialog(
+            viewModel = viewModel,
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, desc, price, cost, stock, cat ->
-                viewModel.addProduct(name, desc, price, cost, stock, cat)
+            onConfirm = { name, desc, price, cost, stock, cat, photo ->
+                viewModel.addProduct(name, desc, price, cost, stock, cat, photo)
                 showAddDialog = false
             }
         )
@@ -119,6 +114,7 @@ fun ProductScreen(viewModel: BusinessViewModel) {
     if (selectedProduct != null) {
         EditProductDialog(
             product = selectedProduct!!,
+            viewModel = viewModel,
             onDismiss = { selectedProduct = null },
             onUpdate = { updated ->
                 viewModel.updateProduct(updated)
@@ -133,9 +129,57 @@ fun ProductScreen(viewModel: BusinessViewModel) {
 }
 
 @Composable
+private fun ProductCard(product: Product, nf: NumberFormat, onClick: () -> Unit) {
+    val photoBitmap = remember(product.photoPath) {
+        if (product.photoPath.isNotBlank()) {
+            try { BitmapFactory.decodeFile(product.photoPath)?.asImageBitmap() } catch (_: Exception) { null }
+        } else null
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (photoBitmap != null) {
+                    Image(
+                        bitmap = photoBitmap,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(Icons.Outlined.Sell, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(28.dp))
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(product.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(2.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("${nf.format(product.price)} MT", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("Stock: ${product.stockQty}", style = MaterialTheme.typography.bodySmall, color = if (product.stockQty <= 5) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun AddProductDialog(
+    viewModel: BusinessViewModel,
     onDismiss: () -> Unit,
-    onConfirm: (String, String, Double, Double, Int, String) -> Unit
+    onConfirm: (String, String, Double, Double, Int, String, String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -143,12 +187,55 @@ private fun AddProductDialog(
     var cost by remember { mutableStateOf("") }
     var stock by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var photoPath by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    val pickPhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            photoUri = uri
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val destFile = File(context.filesDir, "product_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input ->
+                    destFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                photoPath = destFile.absolutePath
+            } catch (_: Exception) {}
+        }
+    }
+
+    val photoBitmap = remember(photoUri) {
+        photoUri?.let { uri ->
+            try { context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it)?.asImageBitmap() } } catch (_: Exception) { null }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Novo Produto", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .clickable { pickPhotoLauncher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (photoBitmap != null) {
+                        Image(bitmap = photoBitmap, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Outlined.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                            Text("Foto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome *") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descrição") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), maxLines = 2)
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Preço (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
@@ -163,7 +250,7 @@ private fun AddProductDialog(
                     val p = price.replace(",", ".").toDoubleOrNull() ?: 0.0
                     val c = cost.replace(",", ".").toDoubleOrNull() ?: 0.0
                     val s = stock.toIntOrNull() ?: 0
-                    if (name.isNotBlank()) onConfirm(name, description, p, c, s, category)
+                    if (name.isNotBlank()) onConfirm(name, description, p, c, s, category, photoPath)
                 },
                 enabled = name.isNotBlank(),
                 shape = RoundedCornerShape(12.dp)
@@ -176,6 +263,7 @@ private fun AddProductDialog(
 @Composable
 private fun EditProductDialog(
     product: Product,
+    viewModel: BusinessViewModel,
     onDismiss: () -> Unit,
     onUpdate: (Product) -> Unit,
     onDelete: () -> Unit
@@ -186,13 +274,54 @@ private fun EditProductDialog(
     var cost by remember { mutableStateOf(product.cost.toString()) }
     var stock by remember { mutableStateOf(product.stockQty.toString()) }
     var category by remember { mutableStateOf(product.category) }
+    var photoPath by remember { mutableStateOf(product.photoPath) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val pickPhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val destFile = File(context.filesDir, "product_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input ->
+                    destFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                photoPath = destFile.absolutePath
+            } catch (_: Exception) {}
+        }
+    }
+
+    val editPhotoBitmap = remember(photoPath) {
+        if (photoPath.isNotBlank()) {
+            try { BitmapFactory.decodeFile(photoPath)?.asImageBitmap() } catch (_: Exception) { null }
+        } else null
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Editar Produto", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .clickable { pickPhotoLauncher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (editPhotoBitmap != null) {
+                        Image(bitmap = editPhotoBitmap, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Outlined.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                            Text("Alterar foto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descrição") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), maxLines = 2)
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Preço (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
@@ -214,7 +343,7 @@ private fun EditProductDialog(
                     val p = price.replace(",", ".").toDoubleOrNull() ?: product.price
                     val c = cost.replace(",", ".").toDoubleOrNull() ?: product.cost
                     val s = stock.toIntOrNull() ?: product.stockQty
-                    onUpdate(product.copy(name = name, description = description, price = p, cost = c, stockQty = s, category = category))
+                    onUpdate(product.copy(name = name, description = description, price = p, cost = c, stockQty = s, category = category, photoPath = photoPath))
                 },
                 shape = RoundedCornerShape(12.dp)
             ) { Text("Salvar") }
