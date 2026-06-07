@@ -235,13 +235,14 @@ fun GoalItemCard(
         0f
     }
 
+    val isComplete = goal.currentAmount >= goal.targetAmount
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onAddSavingsClick() },
+            .clickable(enabled = !isComplete) { onAddSavingsClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(containerColor = if (isComplete) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surfaceContainerLowest),
+        border = BorderStroke(1.dp, if (isComplete) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -304,19 +305,36 @@ fun GoalItemCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = String.format(Locale.getDefault(), "%.0f%%", percentage),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
+                    if (isComplete) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Color(0xFF15803D))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "CONCLUÍDA",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = String.format(Locale.getDefault(), "%.0f%%", percentage),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     IconButton(
@@ -503,52 +521,68 @@ fun AddSavingsModal(
     onDismiss: () -> Unit,
     onAddSavings: (Double) -> Unit
 ) {
+    val isComplete = goal.currentAmount >= goal.targetAmount
     var amountStr by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            Button(
-                onClick = {
-                    val amt = amountStr.toDoubleOrNull() ?: 0.0
-                    if (amt > 0) onAddSavings(amt)
-                },
-                enabled = (amountStr.toDoubleOrNull() ?: 0.0) > 0.0,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text("Depositar", style = MaterialTheme.typography.labelLarge)
+            if (isComplete) {
+                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+                    Text("Fechar", style = MaterialTheme.typography.labelLarge)
+                }
+            } else {
+                Button(
+                    onClick = {
+                        val amt = amountStr.toDoubleOrNull() ?: 0.0
+                        if (amt > 0) onAddSavings(amt)
+                    },
+                    enabled = (amountStr.toDoubleOrNull() ?: 0.0) > 0.0,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Depositar", style = MaterialTheme.typography.labelLarge)
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", style = MaterialTheme.typography.labelLarge)
+            if (!isComplete) {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancelar", style = MaterialTheme.typography.labelLarge)
+                }
             }
         },
         title = {
             Text(
-                "Adicionar economia",
+                if (isComplete) "Meta concluída!" else "Adicionar economia",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            if (isComplete) {
                 Text(
-                    "Insira o valor acumulado para a meta \"${goal.title}\":",
+                    "Parabéns! A meta \"${goal.title}\" já foi completamente atingida (${"%.0f".format(if (goal.targetAmount > 0) goal.currentAmount / goal.targetAmount * 100 else 0.0)}%). Não é possível adicionar mais fundos.",
                     style = MaterialTheme.typography.bodyMedium
                 )
-                OutlinedTextField(
-                    value = amountStr,
-                    onValueChange = { amountStr = it },
-                    label = { Text("Valor (MZN)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("savings_add_input")
-                )
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "Insira o valor acumulado para a meta \"${goal.title}\":",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    OutlinedTextField(
+                        value = amountStr,
+                        onValueChange = { amountStr = it },
+                        label = { Text("Valor (MZN)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().testTag("savings_add_input")
+                    )
+                }
             }
         },
         shape = RoundedCornerShape(16.dp),

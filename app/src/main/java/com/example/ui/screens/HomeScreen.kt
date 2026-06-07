@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -235,7 +236,28 @@ fun HomeScreen(
                             }
                         }
 
-                        // Premium Trending badge matching Design spec
+                        // Real month-over-month trend
+                        val trendInfo = remember(transactions) {
+                            val now = System.currentTimeMillis()
+                            val cal = java.util.Calendar.getInstance()
+                            cal.timeInMillis = now
+                            cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                            cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                            cal.set(java.util.Calendar.MINUTE, 0)
+                            cal.set(java.util.Calendar.SECOND, 0)
+                            cal.set(java.util.Calendar.MILLISECOND, 0)
+                            val thisMonthStart = cal.timeInMillis
+                            cal.add(java.util.Calendar.MONTH, -1)
+                            val lastMonthStart = cal.timeInMillis
+
+                            val thisTx = transactions.filter { it.date >= thisMonthStart }
+                            val lastTx = transactions.filter { it.date in lastMonthStart until thisMonthStart }
+                            val thisNet = thisTx.sumOf { if (it.type == "RECEITA") it.amount else -it.amount }
+                            val lastNet = lastTx.sumOf { if (it.type == "RECEITA") it.amount else -it.amount }
+                            val pct = if (lastNet != 0.0) ((thisNet - lastNet) / kotlin.math.abs(lastNet) * 100) else if (thisNet != 0.0) 100.0 else 0.0
+                            Triple(pct, pct >= 0, kotlin.math.abs(pct))
+                        }
+
                         Row(
                             modifier = Modifier
                                 .padding(top = 16.dp)
@@ -246,15 +268,15 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.TrendingUp,
+                                imageVector = if (trendInfo.second) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
                                 contentDescription = null,
-                                tint = Color(0xFF15803D),
+                                tint = if (trendInfo.second) Color(0xFF15803D) else Color(0xFFB91C1C),
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = "+2.4% este mês",
+                                text = if (trendInfo.second) "+${"%.1f".format(trendInfo.third)}% este mês" else "-${"%.1f".format(trendInfo.third)}% este mês",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF166534),
+                                color = if (trendInfo.second) Color(0xFF166534) else Color(0xFFB91C1C),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -264,7 +286,25 @@ fun HomeScreen(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Yields / Rendimentos Badge
+                            // Rendimentos reais
+                            val incomeGrowth = remember(transactions) {
+                                val now = System.currentTimeMillis()
+                                val cal = java.util.Calendar.getInstance()
+                                cal.timeInMillis = now
+                                cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                                cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                                cal.set(java.util.Calendar.MINUTE, 0)
+                                cal.set(java.util.Calendar.SECOND, 0)
+                                cal.set(java.util.Calendar.MILLISECOND, 0)
+                                val thisStart = cal.timeInMillis
+                                cal.add(java.util.Calendar.MONTH, -1)
+                                val lastStart = cal.timeInMillis
+                                val thisInc = transactions.filter { it.date >= thisStart && it.type == "RECEITA" }.sumOf { it.amount }
+                                val lastInc = transactions.filter { it.date in lastStart until thisStart && it.type == "RECEITA" }.sumOf { it.amount }
+                                if (lastInc != 0.0) ((thisInc - lastInc) / lastInc * 100) else 0.0
+                            }
+                            val economiaPct = if (totalIncome > 0) (poupancaSum / totalIncome * 100) else 0.0
+
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -280,7 +320,7 @@ fun HomeScreen(
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = "+4.2%",
+                                        text = if (incomeGrowth >= 0) "+${"%.1f".format(incomeGrowth)}%" else "${"%.1f".format(incomeGrowth)}%",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         fontWeight = FontWeight.Bold
@@ -288,7 +328,7 @@ fun HomeScreen(
                                 }
                             }
 
-                            // Economy / Economia Badge
+                            // Economia real
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -304,7 +344,7 @@ fun HomeScreen(
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = "12%",
+                                        text = "${"%.0f".format(economiaPct)}%",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         fontWeight = FontWeight.Bold

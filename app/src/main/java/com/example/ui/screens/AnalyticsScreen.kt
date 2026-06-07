@@ -42,9 +42,33 @@ fun AnalyticsScreen(
     val totalIncome by viewModel.totalIncome.collectAsState()
     val totalExpenses by viewModel.totalExpenses.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
+    val goals by viewModel.goals.collectAsState()
     var selectedPeriod by remember { mutableStateOf("Mensal") } // "Mensal", "Anual"
 
     val netBalance = totalIncome - totalExpenses
+
+    val (incomeChange, expenseChange) = remember(transactions) {
+        val now = System.currentTimeMillis()
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = now
+        cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        cal.set(java.util.Calendar.MINUTE, 0)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        val thisStart = cal.timeInMillis
+        cal.add(java.util.Calendar.MONTH, -1)
+        val lastStart = cal.timeInMillis
+
+        val thisInc = transactions.filter { it.date >= thisStart && it.type == "RECEITA" }.sumOf { it.amount }
+        val lastInc = transactions.filter { it.date in lastStart until thisStart && it.type == "RECEITA" }.sumOf { it.amount }
+        val thisExp = transactions.filter { it.date >= thisStart && it.type == "DESPESA" }.sumOf { it.amount }
+        val lastExp = transactions.filter { it.date in lastStart until thisStart && it.type == "DESPESA" }.sumOf { it.amount }
+
+        val incPct = if (lastInc != 0.0) ((thisInc - lastInc) / lastInc * 100) else 0.0
+        val expPct = if (lastExp != 0.0) ((thisExp - lastExp) / lastExp * 100) else 0.0
+        Pair(incPct, expPct)
+    }
 
     val numberFormat = NumberFormat.getNumberInstance(Locale("pt", "MZ")).apply {
         minimumFractionDigits = 2
@@ -213,9 +237,9 @@ fun AnalyticsScreen(
                                 }
                             }
                             Text(
-                                "+12.5%",
+                                if (incomeChange >= 0) "+${"%.1f".format(incomeChange)}%" else "${"%.1f".format(incomeChange)}%",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF15803D),
+                                color = if (incomeChange >= 0) Color(0xFF15803D) else Color(0xFFB91C1C),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -267,9 +291,9 @@ fun AnalyticsScreen(
                                 }
                             }
                             Text(
-                                "-4.2%",
+                                if (expenseChange >= 0) "+${"%.1f".format(expenseChange)}%" else "${"%.1f".format(expenseChange)}%",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFB91C1C),
+                                color = if (expenseChange <= 0) Color(0xFF15803D) else Color(0xFFB91C1C),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -652,7 +676,16 @@ fun AnalyticsScreen(
                         fontWeight = FontWeight.Bold
                     )
 
-                    // Insight Card 1
+                    // Insight real 1: comparacao de despesas
+                    val expInsight = remember(transactions, expenseChange) {
+                        if (expenseChange < 0) {
+                            "Despesas reduzidas em ${"%.0f".format(kotlin.math.abs(expenseChange))}%"
+                        } else if (expenseChange > 0) {
+                            "Despesas aumentaram ${"%.0f".format(expenseChange)}%"
+                        } else {
+                            "Despesas estáveis este mês"
+                        }
+                    }
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -680,14 +713,14 @@ fun AnalyticsScreen(
                             }
                             Column {
                                 Text(
-                                    text = "Despesas reduzidas em 12%",
+                                    text = expInsight,
                                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Excelente trabalho! Você gastou menos em Refeições fora este mês.",
+                                    text = if (expenseChange < 0) "Continue assim! Está a gerir bem o seu orçamento." else if (expenseChange > 0) "Reveja os seus gastos para equilibrar as contas." else "Mantenha o foco nos seus objetivos financeiros.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -695,45 +728,51 @@ fun AnalyticsScreen(
                         }
                     }
 
-                    // Insight Card 2
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    // Insight real 2: meta com maior progresso
+                    val topGoal = remember(goals) {
+                        goals.maxByOrNull { g -> if (g.targetAmount > 0) g.currentAmount / g.targetAmount else 0.0 }
+                    }
+                    if (topGoal != null) {
+                        val goalPct = if (topGoal.targetAmount > 0) (topGoal.currentAmount / topGoal.targetAmount * 100) else 0.0
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Savings,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Column {
-                                Text(
-                                    text = "Meta \"MacBook Pro\" em 42%",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "Você está no caminho certo para atingir seu objetivo até Outubro.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Savings,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "Meta \"${topGoal.title}\" em ${"%.0f".format(goalPct)}%",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = if (goalPct >= 100) "Parabéns! Meta atingida!" else "Continue contribuindo para atingir este objetivo.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }
