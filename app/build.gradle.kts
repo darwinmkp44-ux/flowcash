@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.zacariasthequimo.flowcash"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.flowcash.mzmhfy"
+    applicationId = "com.zacariasthequimo.flowcash"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
@@ -46,6 +46,8 @@ android {
       signingConfig = signingConfigs.getByName("debugConfig")
     }
   }
+
+
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
