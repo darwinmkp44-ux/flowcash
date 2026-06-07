@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import com.zacariasthequimo.flowcash.ui.ThemeMode
 import com.zacariasthequimo.flowcash.ui.screens.*
 import com.zacariasthequimo.flowcash.ui.theme.MyApplicationTheme
 
@@ -32,12 +33,12 @@ class MainActivity : ComponentActivity() {
         val viewModel = ViewModelProvider(this)[FinanceViewModel::class.java]
 
         setContent {
-            var isDarkMode by remember { mutableStateOf(false) }
+            val themeMode by viewModel.themeMode.collectAsState()
             val systemDark = isSystemInDarkTheme()
-            
-            // Sync with system default setting on first load
-            LaunchedEffect(Unit) {
-                isDarkMode = systemDark
+            val isDarkMode = when (themeMode) {
+                ThemeMode.SYSTEM -> systemDark
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
             }
 
             MyApplicationTheme(darkTheme = isDarkMode) {
@@ -48,7 +49,8 @@ class MainActivity : ComponentActivity() {
                     AppOrchestrator(
                         viewModel = viewModel,
                         isDarkMode = isDarkMode,
-                        onToggleDarkMode = { isDarkMode = it }
+                        themeMode = themeMode,
+                        onSetThemeMode = { viewModel.setThemeMode(it) }
                     )
                 }
             }
@@ -73,7 +75,8 @@ enum class BottomNavTab(
 fun AppOrchestrator(
     viewModel: FinanceViewModel,
     isDarkMode: Boolean,
-    onToggleDarkMode: (Boolean) -> Unit
+    themeMode: ThemeMode,
+    onSetThemeMode: (ThemeMode) -> Unit
 ) {
     var activeTab by remember { mutableStateOf(BottomNavTab.HOME) }
     var isAddingTransaction by remember { mutableStateOf(false) }
@@ -156,7 +159,8 @@ fun AppOrchestrator(
                         ProfileScreen(
                             viewModel = viewModel,
                             isDarkMode = isDarkMode,
-                            onToggleDarkMode = onToggleDarkMode
+                            themeMode = themeMode,
+                            onSetThemeMode = onSetThemeMode
                         )
                     }
                 }

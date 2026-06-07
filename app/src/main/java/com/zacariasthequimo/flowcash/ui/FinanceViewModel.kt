@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
 class FinanceViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
@@ -39,6 +41,17 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
             .apply()
         _userName.value = name
         _userEmail.value = email
+    }
+
+    // Theme preference
+    private val _themeMode = MutableStateFlow(
+        ThemeMode.valueOf(sharedPrefs.getString("theme_mode", ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name)
+    )
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+    fun setThemeMode(mode: ThemeMode) {
+        sharedPrefs.edit().putString("theme_mode", mode.name).apply()
+        _themeMode.value = mode
     }
 
     // Toggle for balance visibility (Ocultar/Mostrar saldo)
@@ -117,8 +130,16 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                 repository.insertGoal(
                     currentGoal.copy(currentAmount = currentGoal.currentAmount + amount)
                 )
-                // Also optionally, we could create an automatic transfer/transaction for it, 
-                // but let's keep it simple as specified.
+                repository.insertTransaction(
+                    Transaction(
+                        title = "Depósito: ${currentGoal.title}",
+                        category = "Outros",
+                        type = "DESPESA",
+                        amount = amount,
+                        date = System.currentTimeMillis(),
+                        description = "Depósito para poupança - ${currentGoal.title}"
+                    )
+                )
             }
         }
     }

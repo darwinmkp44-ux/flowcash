@@ -43,9 +43,10 @@ fun AnalyticsScreen(
     val totalExpenses by viewModel.totalExpenses.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     val goals by viewModel.goals.collectAsState()
+    val poupancaSum by viewModel.poupancaSum.collectAsState()
     var selectedPeriod by remember { mutableStateOf("Mensal") } // "Mensal", "Anual"
 
-    val netBalance = totalIncome - totalExpenses
+    val netBalance = totalIncome - totalExpenses - poupancaSum
 
     val (incomeChange, expenseChange) = remember(transactions) {
         val now = System.currentTimeMillis()
@@ -533,10 +534,10 @@ fun AnalyticsScreen(
                             Pair("Outros", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", outrosPercent * 100) else "0%")
                         )
                         val legendColors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.outlineVariant,
-                            MaterialTheme.colorScheme.secondaryContainer
+                            Color(0xFFFF9800),
+                            Color(0xFFF44336),
+                            Color(0xFFFFC107),
+                            Color(0xFF009688)
                         )
 
                         // Custom Styled Circular Ring Pie Canvas Chart
@@ -544,10 +545,10 @@ fun AnalyticsScreen(
                             modifier = Modifier.size(170.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            val color1 = MaterialTheme.colorScheme.primary       // Compras
-                            val color2 = MaterialTheme.colorScheme.primaryContainer // Alimentação
-                            val color3 = MaterialTheme.colorScheme.outlineVariant   // Transporte
-                            val color4 = MaterialTheme.colorScheme.secondaryContainer // Outros
+                            val color1 = Color(0xFFFF9800) // Compras - Laranja
+                            val color2 = Color(0xFFF44336) // Alimentação - Vermelho
+                            val color3 = Color(0xFFFFC107) // Transporte - Âmbar
+                            val color4 = Color(0xFF009688) // Outros - Verde Azulado
 
                             val strokeWidthVal = 14.dp
 
@@ -565,9 +566,10 @@ fun AnalyticsScreen(
                                 }
                             }
 
+                            val bgCircleColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                             Canvas(modifier = Modifier.fillMaxSize()) {
                                 drawCircle(
-                                    color = Color(0xFFF1F5F9),
+                                    color = bgCircleColor,
                                     style = Stroke(width = strokeWidthVal.toPx())
                                 )
 

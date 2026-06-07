@@ -27,13 +27,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import com.zacariasthequimo.flowcash.ui.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: FinanceViewModel,
     isDarkMode: Boolean,
-    onToggleDarkMode: (Boolean) -> Unit
+    themeMode: ThemeMode,
+    onSetThemeMode: (ThemeMode) -> Unit
 ) {
     val userName by viewModel.userName.collectAsState()
     val userEmail by viewModel.userEmail.collectAsState()
@@ -239,23 +241,20 @@ fun ProfileScreen(
                         }
                     }
 
-                    // Item: Theme Toggle Switch (Tema Escuro / Light mode active)
+                    // Item: Theme Selector (Sistema / Claro / Escuro)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -271,29 +270,37 @@ fun ProfileScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
-                                Column {
-                                    Text(
-                                        text = "Tema",
-                                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = if (isDarkMode) "Tema Escuro Ativo" else "Tema Claro Ativo",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                Text(
+                                    text = "Tema",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                ThemeMode.entries.forEach { mode ->
+                                    val isSelected = themeMode == mode
+                                    val label = when (mode) {
+                                        ThemeMode.SYSTEM -> "Sistema"
+                                        ThemeMode.LIGHT -> "Claro"
+                                        ThemeMode.DARK -> "Escuro"
+                                    }
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { onSetThemeMode(mode) },
+                                        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                        ),
+                                        modifier = Modifier.weight(1f)
                                     )
                                 }
                             }
-                            Switch(
-                                checked = isDarkMode,
-                                onCheckedChange = onToggleDarkMode,
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                    checkedTrackColor = MaterialTheme.colorScheme.primary
-                                ),
-                                modifier = Modifier.testTag("dark_mode_switch")
-                            )
                         }
                     }
 

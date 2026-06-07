@@ -41,7 +41,13 @@ fun NewTransactionScreen(
     var selectedCategory by remember { mutableStateOf("Compras") }
     var description by remember { mutableStateOf("") }
 
-    val categories = listOf("Compras", "Alimentação", "Transporte", "Outros")
+    val expenseCategories = listOf("Compras", "Alimentação", "Transporte", "Outros")
+    val incomeCategories = listOf("Salário", "Freelance", "Investimentos", "Presente", "Outros")
+    val categories = if (type == "DESPESA") expenseCategories else incomeCategories
+
+    LaunchedEffect(type) {
+        selectedCategory = categories.first()
+    }
 
     Scaffold(
         topBar = {
@@ -284,6 +290,10 @@ fun NewTransactionScreen(
                                     "Compras" -> Icons.Default.ShoppingCart
                                     "Alimentação" -> Icons.Default.Restaurant
                                     "Transporte" -> Icons.Default.DirectionsCar
+                                    "Salário" -> Icons.Default.AccountBalance
+                                    "Freelance" -> Icons.Default.Computer
+                                    "Investimentos" -> Icons.Default.TrendingUp
+                                    "Presente" -> Icons.Default.CardGiftcard
                                     else -> Icons.Default.MoreHoriz
                                 }
                                 val iconColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant

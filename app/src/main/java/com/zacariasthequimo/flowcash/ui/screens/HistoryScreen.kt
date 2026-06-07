@@ -277,6 +277,10 @@ fun HistoryTransactionItem(
                     "transporte" -> Icons.Default.DirectionsCar
                     "utilidades" -> Icons.Default.Bolt
                     "rendimento" -> Icons.Default.Payments
+                    "salário" -> Icons.Default.AccountBalance
+                    "freelance" -> Icons.Default.Computer
+                    "investimentos" -> Icons.Default.TrendingUp
+                    "presente" -> Icons.Default.CardGiftcard
                     else -> Icons.Default.Category
                 }
 

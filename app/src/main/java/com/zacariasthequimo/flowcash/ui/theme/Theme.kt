@@ -8,30 +8,31 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     primary = FlowInversePrimary,
     onPrimary = FlowOnPrimary,
-    primaryContainer = FlowPrimary,
-    onPrimaryContainer = FlowOnPrimaryContainer,
+    primaryContainer = Color(0xFF1A3A5C),
+    onPrimaryContainer = FlowPrimaryContainer,
     secondary = FlowSecondary,
     onSecondary = FlowOnSecondary,
-    secondaryContainer = FlowSecondaryContainer,
-    onSecondaryContainer = FlowOnSecondaryContainer,
+    secondaryContainer = Color(0xFF2A2D38),
+    onSecondaryContainer = FlowSecondaryContainer,
     background = FlowDarkBackground,
     onBackground = FlowDarkOnSurface,
     surface = FlowDarkSurface,
     onSurface = FlowDarkOnSurface,
-    error = FlowError,
-    onError = FlowOnError,
-    outline = FlowOutline,
-    outlineVariant = FlowOutlineVariant,
-    surfaceContainerLowest = FlowDarkBackground,
-    surfaceContainerLow = FlowDarkSurface,
-    surfaceContainer = FlowDarkSurface,
-    surfaceContainerHigh = FlowDarkSurface,
-    surfaceContainerHighest = FlowDarkSurface
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    outline = Color(0xFF8E9099),
+    outlineVariant = Color(0xFF44474E),
+    surfaceContainerLowest = FlowDarkSurfaceContainerLowest,
+    surfaceContainerLow = FlowDarkSurfaceContainerLow,
+    surfaceContainer = FlowDarkSurfaceContainer,
+    surfaceContainerHigh = FlowDarkSurfaceContainerHigh,
+    surfaceContainerHighest = FlowDarkSurfaceContainerHighest
 )
 
 private val LightColorScheme = lightColorScheme(

@@ -27,10 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,7 +54,7 @@ fun HomeScreen(
     val totalExpenses by viewModel.totalExpenses.collectAsState()
     val poupancaSum by viewModel.poupancaSum.collectAsState()
 
-    val currentBalance = totalIncome - totalExpenses
+    val currentBalance = totalIncome - totalExpenses - poupancaSum
 
     // Format currency to MZN style (e.g. 145.280,00)
     val numberFormat = NumberFormat.getNumberInstance(Locale("pt", "MZ")).apply {
@@ -511,91 +510,85 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Styled Custom Canvas Line Graph
-                        val strokeColor = MaterialTheme.colorScheme.primary
-                        val gradientFill = Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.0f)
-                            )
-                        )
+                        // Daily Income vs Expenses Bar Chart (last 7 days)
+                        val dailyBars = remember(transactions) {
+                            val cal = java.util.Calendar.getInstance()
+                            val today = java.util.Calendar.getInstance()
+                            val bars = mutableListOf<Pair<Double, Double>>()
+                            for (i in 6 downTo 0) {
+                                cal.timeInMillis = today.timeInMillis
+                                cal.add(java.util.Calendar.DAY_OF_MONTH, -i)
+                                cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                                cal.set(java.util.Calendar.MINUTE, 0)
+                                cal.set(java.util.Calendar.SECOND, 0)
+                                cal.set(java.util.Calendar.MILLISECOND, 0)
+                                val dayStart = cal.timeInMillis
+                                cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
+                                val dayEnd = cal.timeInMillis
+                                val inc = transactions.filter { it.date in dayStart until dayEnd && it.type == "RECEITA" }.sumOf { it.amount }
+                                val exp = transactions.filter { it.date in dayStart until dayEnd && it.type == "DESPESA" }.sumOf { it.amount }
+                                bars.add(Pair(inc, exp))
+                            }
+                            bars
+                        }
 
-                        // Dynamic date formatting for x-axis
-                        val sdf = java.text.SimpleDateFormat("d MMM", java.util.Locale("pt", "MZ"))
-                        val dateToday = sdf.format(java.util.Date(System.currentTimeMillis()))
-                        val date15DaysAgo = sdf.format(java.util.Date(System.currentTimeMillis() - 15L * 24 * 3600 * 1000))
-                        val date30DaysAgo = sdf.format(java.util.Date(System.currentTimeMillis() - 30L * 24 * 3600 * 1000))
-
-                        // Real trend calculations over 30 days
-                        val tx30Days = transactions
-                            .filter { it.date >= System.currentTimeMillis() - 30L * 24 * 3600 * 1000 }
-                            .sortedBy { it.date }
+                        val maxBarValue = dailyBars.maxOfOrNull { maxOf(it.first, it.second) }?.coerceAtLeast(1.0) ?: 1.0
 
                         Canvas(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(130.dp)
+                                .height(150.dp)
                         ) {
-                            val path = Path().apply {
-                                val w = size.width
-                                val h = size.height
+                            val w = size.width
+                            val h = size.height
+                            val barCount = dailyBars.size
+                            val totalGap = (barCount - 1) * 8f
+                            val barWidth = ((w - totalGap) / barCount) * 0.7f
+                            val halfBar = barWidth / 2f
 
-                                if (tx30Days.isEmpty()) {
-                                    moveTo(0f, h * 0.5f)
-                                    lineTo(w, h * 0.5f)
-                                } else {
-                                    val startTime = System.currentTimeMillis() - 30L * 24 * 3600 * 1000
-                                    val endTime = System.currentTimeMillis()
-                                    val timeRange = (endTime - startTime).coerceAtLeast(1).toDouble()
+                            dailyBars.forEachIndexed { index, (inc, exp) ->
+                                val x = index * (barWidth + 8f)
+                                val incHeight = (inc / maxBarValue * h * 0.8f).toFloat()
+                                val expHeight = (exp / maxBarValue * h * 0.8f).toFloat()
+                                val baseY = h * 0.9f
 
-                                    val points = ArrayList<Pair<Long, Double>>()
-                                    var bal = currentBalance - tx30Days.sumOf { if (it.type == "RECEITA") it.amount else -it.amount }
-                                    points.add(Pair(startTime, bal))
-
-                                    for (tx in tx30Days) {
-                                        bal += if (tx.type == "RECEITA") tx.amount else -tx.amount
-                                        points.add(Pair(tx.date, bal))
-                                    }
-                                    points.add(Pair(endTime, currentBalance))
-
-                                    val minBal = points.minOf { it.second }
-                                    val maxBal = points.maxOf { it.second }
-                                    val balRange = (maxBal - minBal).coerceAtLeast(1.0)
-
-                                    val firstX = ((points[0].first - startTime) / timeRange * w).toFloat()
-                                    val firstY = (h - ((points[0].second - minBal) / balRange * (h * 0.8f) + h * 0.1f)).toFloat()
-                                    moveTo(firstX, firstY)
-
-                                    for (i in 1 until points.size) {
-                                        val pt = points[i]
-                                        val x = ((pt.first - startTime) / timeRange * w).toFloat()
-                                        val y = (h - ((pt.second - minBal) / balRange * (h * 0.8f) + h * 0.1f)).toFloat()
-                                        lineTo(x, y)
-                                    }
+                                // Income bar (green)
+                                if (incHeight > 0f) {
+                                    drawRect(
+                                        color = Color(0xFF22C55E),
+                                        topLeft = Offset(x, baseY - incHeight),
+                                        size = Size(halfBar, incHeight)
+                                    )
+                                }
+                                // Expense bar (red)
+                                if (expHeight > 0f) {
+                                    drawRect(
+                                        color = Color(0xFFEF4444),
+                                        topLeft = Offset(x + halfBar, baseY - expHeight),
+                                        size = Size(halfBar, expHeight)
+                                    )
                                 }
                             }
-
-                            // Draw the gradient beneath path
-                            val fillPath = Path().apply {
-                                addPath(path)
-                                lineTo(size.width, size.height)
-                                lineTo(0f, size.height)
-                                close()
-                            }
-
-                            drawPath(path = fillPath, brush = gradientFill)
-                            drawPath(path = path, color = strokeColor, style = Stroke(width = 3.dp.toPx()))
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(date30DaysAgo, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                            Text(date15DaysAgo, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
-                            Text(dateToday, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFF22C55E)))
+                                    Text("Receitas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFFEF4444)))
+                                    Text("Despesas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                                }
+                            }
+                            Text("Últimos 7 dias", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                         }
                     }
                 }
@@ -696,6 +689,10 @@ fun TransactionItem(tx: Transaction) {
                     "transporte" -> Icons.Default.DirectionsCar
                     "utilidades" -> Icons.Default.Bolt
                     "rendimento" -> Icons.Default.Payments
+                    "salário" -> Icons.Default.AccountBalance
+                    "freelance" -> Icons.Default.Computer
+                    "investimentos" -> Icons.Default.TrendingUp
+                    "presente" -> Icons.Default.CardGiftcard
                     else -> Icons.Default.Category
                 }
 
