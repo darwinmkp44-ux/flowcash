@@ -40,18 +40,26 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
             }
+            var onboardingDone by remember { mutableStateOf(viewModel.isOnboardingComplete) }
 
             MyApplicationTheme(darkTheme = isDarkMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppOrchestrator(
-                        viewModel = viewModel,
-                        isDarkMode = isDarkMode,
-                        themeMode = themeMode,
-                        onSetThemeMode = { viewModel.setThemeMode(it) }
-                    )
+                    if (!onboardingDone) {
+                        OnboardingScreen(
+                            viewModel = viewModel,
+                            onComplete = { onboardingDone = true }
+                        )
+                    } else {
+                        AppOrchestrator(
+                            viewModel = viewModel,
+                            isDarkMode = isDarkMode,
+                            themeMode = themeMode,
+                            onSetThemeMode = { viewModel.setThemeMode(it) }
+                        )
+                    }
                 }
             }
         }
@@ -80,10 +88,15 @@ fun AppOrchestrator(
 ) {
     var activeTab by remember { mutableStateOf(BottomNavTab.HOME) }
     var isAddingTransaction by remember { mutableStateOf(false) }
+    var showAccountDetail by remember { mutableStateOf(false) }
+    var showSecurity by remember { mutableStateOf(false) }
+    var showExport by remember { mutableStateOf(false) }
+
+    val activeSubScreen = showAccountDetail || showSecurity || showExport
 
     Scaffold(
         bottomBar = {
-            if (!isAddingTransaction) {
+            if (!isAddingTransaction && !activeSubScreen) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     modifier = Modifier.testTag("bottom_nav_bar")
@@ -126,42 +139,66 @@ fun AppOrchestrator(
                 .padding(bottom = if (isAddingTransaction) 0.dp else innerPadding.calculateBottomPadding())
         ) {
             // Screen state controller
-            if (isAddingTransaction) {
-                NewTransactionScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = { isAddingTransaction = false }
-                )
-            } else {
-                when (activeTab) {
-                    BottomNavTab.HOME -> {
-                        HomeScreen(
-                            viewModel = viewModel,
-                            onNavigateToNewTransaction = { isAddingTransaction = true },
-                            onNavigateToHistory = { activeTab = BottomNavTab.HISTORY }
-                        )
-                    }
-                    BottomNavTab.HISTORY -> {
-                        HistoryScreen(
-                            viewModel = viewModel
-                        )
-                    }
-                    BottomNavTab.ANALYTICS -> {
-                        AnalyticsScreen(
-                            viewModel = viewModel
-                        )
-                    }
-                    BottomNavTab.GOALS -> {
-                        GoalsScreen(
-                            viewModel = viewModel
-                        )
-                    }
-                    BottomNavTab.PROFILE -> {
-                        ProfileScreen(
-                            viewModel = viewModel,
-                            isDarkMode = isDarkMode,
-                            themeMode = themeMode,
-                            onSetThemeMode = onSetThemeMode
-                        )
+            when {
+                isAddingTransaction -> {
+                    NewTransactionScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { isAddingTransaction = false }
+                    )
+                }
+                showAccountDetail -> {
+                    AccountDetailScreen(
+                        viewModel = viewModel,
+                        onBack = { showAccountDetail = false }
+                    )
+                }
+                showSecurity -> {
+                    SecurityScreen(
+                        viewModel = viewModel,
+                        onBack = { showSecurity = false }
+                    )
+                }
+                showExport -> {
+                    ExportScreen(
+                        viewModel = viewModel,
+                        onBack = { showExport = false }
+                    )
+                }
+                else -> {
+                    when (activeTab) {
+                        BottomNavTab.HOME -> {
+                            HomeScreen(
+                                viewModel = viewModel,
+                                onNavigateToNewTransaction = { isAddingTransaction = true },
+                                onNavigateToHistory = { activeTab = BottomNavTab.HISTORY }
+                            )
+                        }
+                        BottomNavTab.HISTORY -> {
+                            HistoryScreen(
+                                viewModel = viewModel
+                            )
+                        }
+                        BottomNavTab.ANALYTICS -> {
+                            AnalyticsScreen(
+                                viewModel = viewModel
+                            )
+                        }
+                        BottomNavTab.GOALS -> {
+                            GoalsScreen(
+                                viewModel = viewModel
+                            )
+                        }
+                        BottomNavTab.PROFILE -> {
+                            ProfileScreen(
+                                viewModel = viewModel,
+                                isDarkMode = isDarkMode,
+                                themeMode = themeMode,
+                                onSetThemeMode = onSetThemeMode,
+                                onNavigateToAccount = { showAccountDetail = true },
+                                onNavigateToSecurity = { showSecurity = true },
+                                onNavigateToExport = { showExport = true }
+                            )
+                        }
                     }
                 }
             }

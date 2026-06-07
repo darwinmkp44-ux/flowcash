@@ -9,6 +9,8 @@ import com.zacariasthequimo.flowcash.data.database.AppDatabase
 import com.zacariasthequimo.flowcash.data.entity.Goal
 import com.zacariasthequimo.flowcash.data.entity.Transaction
 import com.zacariasthequimo.flowcash.data.repository.FinanceRepository
+import com.zacariasthequimo.flowcash.notification.NotificationHelper
+import com.zacariasthequimo.flowcash.notification.NotificationReceiver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +54,72 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     fun setThemeMode(mode: ThemeMode) {
         sharedPrefs.edit().putString("theme_mode", mode.name).apply()
         _themeMode.value = mode
+    }
+
+    // Onboarding state
+    val isOnboardingComplete: Boolean
+        get() = sharedPrefs.getBoolean("onboarding_complete", false)
+
+    fun setOnboardingComplete() {
+        sharedPrefs.edit().putBoolean("onboarding_complete", true).apply()
+    }
+
+    // Profile photo
+    private val _profilePhotoPath = MutableStateFlow(sharedPrefs.getString("profile_photo", null))
+    val profilePhotoPath: StateFlow<String?> = _profilePhotoPath.asStateFlow()
+
+    fun setProfilePhotoPath(path: String) {
+        sharedPrefs.edit().putString("profile_photo", path).apply()
+        _profilePhotoPath.value = path
+    }
+
+    // PIN lock
+    private val _isPinEnabled = MutableStateFlow(sharedPrefs.getBoolean("pin_enabled", false))
+    val isPinEnabled: StateFlow<Boolean> = _isPinEnabled.asStateFlow()
+
+    private var _pinHash = sharedPrefs.getString("pin_hash", "") ?: ""
+
+    fun setPinEnabled(enabled: Boolean) {
+        sharedPrefs.edit().putBoolean("pin_enabled", enabled).apply()
+        _isPinEnabled.value = enabled
+    }
+
+    fun setPinHash(pin: String) {
+        val hash = pin.hashCode().toString()
+        _pinHash = hash
+        sharedPrefs.edit().putString("pin_hash", hash).apply()
+    }
+
+    fun verifyPin(pin: String): Boolean {
+        return _pinHash == pin.hashCode().toString()
+    }
+
+    // Notifications
+    private val _notificationsEnabled = MutableStateFlow(sharedPrefs.getBoolean("notifications_enabled", true))
+    val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
+
+    init { scheduleNotificationsIfEnabled() }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        sharedPrefs.edit().putBoolean("notifications_enabled", enabled).apply()
+        _notificationsEnabled.value = enabled
+        val context = getApplication<Application>()
+        if (enabled) {
+            NotificationReceiver.scheduleDailyReminder(context)
+            NotificationReceiver.scheduleWeeklySummary(context)
+            NotificationReceiver.scheduleMonthlySummary(context)
+        } else {
+            NotificationReceiver.cancelAll(context)
+        }
+    }
+
+    private fun scheduleNotificationsIfEnabled() {
+        if (_notificationsEnabled.value) {
+            val context = getApplication<Application>()
+            NotificationReceiver.scheduleDailyReminder(context)
+            NotificationReceiver.scheduleWeeklySummary(context)
+            NotificationReceiver.scheduleMonthlySummary(context)
+        }
     }
 
     // Toggle for balance visibility (Ocultar/Mostrar saldo)
@@ -107,6 +175,12 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                     description = description
                 )
             )
+            if (_notificationsEnabled.value) {
+                NotificationHelper.showTransactionAlert(
+                    getApplication(),
+                    title, category, amount, type == "DESPESA"
+                )
+            }
         }
     }
 
@@ -127,8 +201,9 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val currentGoal = goals.value.find { it.id == goalId }
             if (currentGoal != null) {
+                val newAmount = currentGoal.currentAmount + amount
                 repository.insertGoal(
-                    currentGoal.copy(currentAmount = currentGoal.currentAmount + amount)
+                    currentGoal.copy(currentAmount = newAmount)
                 )
                 repository.insertTransaction(
                     Transaction(
@@ -140,6 +215,17 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
                         description = "Depósito para poupança - ${currentGoal.title}"
                     )
                 )
+                if (_notificationsEnabled.value && currentGoal.targetAmount > 0) {
+                    val progress = newAmount / currentGoal.targetAmount * 100
+                    if (progress >= 90 && progress < 100) {
+                        NotificationHelper.showGoalAlert(
+                            getApplication(),
+                            currentGoal.title,
+                            progress,
+                            currentGoal.targetAmount - newAmount
+                        )
+                    }
+                }
             }
         }
     }

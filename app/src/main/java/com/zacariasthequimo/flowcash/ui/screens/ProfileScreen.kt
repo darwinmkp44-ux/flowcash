@@ -26,6 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
 import com.zacariasthequimo.flowcash.ui.ThemeMode
 
@@ -35,20 +39,29 @@ fun ProfileScreen(
     viewModel: FinanceViewModel,
     isDarkMode: Boolean,
     themeMode: ThemeMode,
-    onSetThemeMode: (ThemeMode) -> Unit
+    onSetThemeMode: (ThemeMode) -> Unit,
+    onNavigateToAccount: () -> Unit = {},
+    onNavigateToSecurity: () -> Unit = {},
+    onNavigateToExport: () -> Unit = {}
 ) {
     val userName by viewModel.userName.collectAsState()
     val userEmail by viewModel.userEmail.collectAsState()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+    val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
     var showEditDialog by remember { mutableStateOf(false) }
     var editName by remember { mutableStateOf(userName) }
     var editEmail by remember { mutableStateOf(userEmail) }
+
+    val profileBitmap = remember(profilePhotoPath) {
+        profilePhotoPath?.let { path ->
+            try { BitmapFactory.decodeFile(path)?.asImageBitmap() } catch (_: Exception) { null }
+        }
+    }
 
     LaunchedEffect(userName, userEmail) {
         editName = userName
         editEmail = userEmail
     }
-
-    var notificationsEnabled by remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -125,19 +138,27 @@ fun ProfileScreen(
                             .clickable { showEditDialog = true },
                         contentAlignment = Alignment.Center
                     ) {
-                        // Initials for avatar
-                        val initials = userName.split(" ")
-                            .filter { it.isNotBlank() }
-                            .take(2)
-                            .map { it.first().uppercase() }
-                            .joinToString("")
-                        Text(
-                            text = initials.ifEmpty { "U" },
-                            style = MaterialTheme.typography.displaySmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
+                        if (profileBitmap != null) {
+                            Image(
+                                bitmap = profileBitmap,
+                                contentDescription = "Foto de perfil",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
-                        )
+                        } else {
+                            val initials = userName.split(" ")
+                                .filter { it.isNotBlank() }
+                                .take(2)
+                                .map { it.first().uppercase() }
+                                .joinToString("")
+                            Text(
+                                text = initials.ifEmpty { "U" },
+                                style = MaterialTheme.typography.displaySmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
                     }
 
                     Column(
@@ -173,14 +194,16 @@ fun ProfileScreen(
                     ProfileSettingItem(
                         icon = Icons.Outlined.Person,
                         title = "Conta",
-                        subtitle = "Detalhes da conta, bancos parceiros"
+                        subtitle = "Nome, email, foto de perfil",
+                        onClick = onNavigateToAccount
                     )
 
                     // Item: Security
                     ProfileSettingItem(
                         icon = Icons.Outlined.Security,
                         title = "Segurança",
-                        subtitle = "Biometria, 2FA, senhas de segurança"
+                        subtitle = "Bloqueio com PIN, privacidade",
+                        onClick = onNavigateToSecurity
                     )
 
                     // Item: Notifications (with switch)
@@ -231,7 +254,7 @@ fun ProfileScreen(
                             }
                             Switch(
                                 checked = notificationsEnabled,
-                                onCheckedChange = { notificationsEnabled = it },
+                                onCheckedChange = { viewModel.setNotificationsEnabled(it) },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                                     checkedTrackColor = MaterialTheme.colorScheme.primary
@@ -308,14 +331,15 @@ fun ProfileScreen(
                     ProfileSettingItem(
                         icon = Icons.Outlined.Share,
                         title = "Exportar dados",
-                        subtitle = "Extratos em PDF, CSV ou JSON"
+                        subtitle = "CSV de transações e metas",
+                        onClick = onNavigateToExport
                     )
 
                     // Item: Help
                     ProfileSettingItem(
                         icon = Icons.Outlined.HelpOutline,
                         title = "Ajuda & Suporte",
-                        subtitle = "Perguntas frequentes, canais de contato"
+                        subtitle = "Perguntas frequentes, sobre o app"
                     )
                 }
             }
@@ -416,12 +440,13 @@ fun ProfileScreen(
 fun ProfileSettingItem(
     icon: ImageVector,
     title: String,
-    subtitle: String
+    subtitle: String,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Detail Action */ },
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
