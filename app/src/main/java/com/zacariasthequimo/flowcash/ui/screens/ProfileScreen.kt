@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.zacariasthequimo.flowcash.BuildConfig
+import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import com.zacariasthequimo.flowcash.ui.ThemeMode
+import com.zacariasthequimo.flowcash.ui.UserAvatar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
@@ -30,8 +33,6 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import com.zacariasthequimo.flowcash.ui.FinanceViewModel
-import com.zacariasthequimo.flowcash.ui.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,21 +72,10 @@ fun ProfileScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "FC",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        UserAvatar(
+                            photoPath = profilePhotoPath,
+                            userName = userName
+                        )
                         Text(
                             "Perfil",
                             style = MaterialTheme.typography.headlineMedium.copy(

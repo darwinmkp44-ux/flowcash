@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.data.entity.Transaction
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import com.zacariasthequimo.flowcash.ui.UserAvatar
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,6 +36,8 @@ import java.util.*
 fun HistoryScreen(
     viewModel: FinanceViewModel
 ) {
+    val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
+    val userName by viewModel.userName.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilterTab by remember { mutableStateOf("Mês") } // "Hoje", "Semana", "Mês"
@@ -66,21 +69,10 @@ fun HistoryScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "FC",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        UserAvatar(
+                            photoPath = profilePhotoPath,
+                            userName = userName
+                        )
                         Text(
                             "Histórico",
                             style = MaterialTheme.typography.headlineMedium.copy(

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.data.entity.Transaction
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import com.zacariasthequimo.flowcash.ui.UserAvatar
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -48,6 +49,7 @@ fun HomeScreen(
     onNavigateToHistory: () -> Unit
 ) {
     val userName by viewModel.userName.collectAsState()
+    val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
     val isBalanceVisible by viewModel.isBalanceVisible.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     val totalIncome by viewModel.totalIncome.collectAsState()
@@ -70,22 +72,10 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // User Profile Circle Placeholder styled to match design
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "FC",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        UserAvatar(
+                            photoPath = profilePhotoPath,
+                            userName = userName
+                        )
                         Column {
                             Text(
                                 text = "Bom dia,",

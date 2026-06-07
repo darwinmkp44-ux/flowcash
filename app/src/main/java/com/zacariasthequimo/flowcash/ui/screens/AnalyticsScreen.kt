@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import com.zacariasthequimo.flowcash.ui.UserAvatar
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -39,6 +40,7 @@ import java.util.Locale
 fun AnalyticsScreen(
     viewModel: FinanceViewModel
 ) {
+    val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
     val totalIncome by viewModel.totalIncome.collectAsState()
     val totalExpenses by viewModel.totalExpenses.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
@@ -84,21 +86,10 @@ fun AnalyticsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "FC",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        UserAvatar(
+                            photoPath = profilePhotoPath,
+                            userName = viewModel.userName.collectAsState().value
+                        )
                         Text(
                             "Estatísticas",
                             style = MaterialTheme.typography.headlineMedium.copy(

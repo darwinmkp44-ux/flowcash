@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.data.entity.Goal
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import com.zacariasthequimo.flowcash.ui.UserAvatar
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -42,6 +43,8 @@ fun GoalsScreen(
     viewModel: FinanceViewModel
 ) {
     val goals by viewModel.goals.collectAsState()
+    val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
+    val userName by viewModel.userName.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
     var showAddSavingsDialog by remember { mutableStateOf<Goal?>(null) }
 
@@ -53,21 +56,10 @@ fun GoalsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "FC",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        UserAvatar(
+                            photoPath = profilePhotoPath,
+                            userName = userName
+                        )
                         Text(
                             "Metas",
                             style = MaterialTheme.typography.headlineMedium.copy(
