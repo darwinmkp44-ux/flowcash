@@ -57,36 +57,51 @@ jobs:
           STORE_PASSWORD: mypassword
           KEY_PASSWORD: mypassword
 
-      - name: Build Release APK
-        run: gradle assembleRelease
+      - name: Build PRO Release APK
+        run: gradle assembleProRelease
         env:
           KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
           STORE_PASSWORD: mypassword
           KEY_PASSWORD: mypassword
 
-      - name: Rename APK
-        run: |
-          mv app/build/outputs/apk/release/app-release.apk \
-             app/build/outputs/apk/release/FlowCash-v1.0-release.apk
+      - name: Build BUSINESS Release APK
+        run: gradle assembleBusinessRelease
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
+          STORE_PASSWORD: mypassword
+          KEY_PASSWORD: mypassword
 
-      - name: Upload APK as Artifact
+      - name: Rename APKs
+        run: |
+          mv app/build/outputs/apk/pro/release/app-pro-release.apk \
+             app/build/outputs/apk/pro/release/FlowCash-PRO-v1.2-release.apk
+          mv app/build/outputs/apk/business/release/app-business-release.apk \
+             app/build/outputs/apk/business/release/FlowCash-BUSINESS-v1.2-release.apk
+
+      - name: Upload APKs as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flowcash-release-apk
-          path: app/build/outputs/apk/release/FlowCash-v1.0-release.apk
+          name: flowcash-release-apks
+          path: |
+            app/build/outputs/apk/pro/release/FlowCash-PRO-v1.2-release.apk
+            app/build/outputs/apk/business/release/FlowCash-BUSINESS-v1.2-release.apk
 
       - name: Create GitHub Release (Tags)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/FlowCash-v1.0-release.apk
+          files: |
+            app/build/outputs/apk/pro/release/FlowCash-PRO-v1.2-release.apk
+            app/build/outputs/apk/business/release/FlowCash-BUSINESS-v1.2-release.apk
           name: Release ${{ github.ref_name }}
           body: |
-            Nova versão ${{ github.ref_name }} do FlowCash!
+            ## FlowCash ${{ github.ref_name }}
 
-            ### APK
-            - Anexado automaticamente pela pipeline CI/CD.
-            - Apenas instalar no dispositivo Android (minSdk 24).
+            ### PRO APK
+            - `FlowCash-PRO-v1.2-release.apk` — Finanças pessoais
+
+            ### BUSINESS APK
+            - `FlowCash-BUSINESS-v1.2-release.apk` — Finanças pessoais + Gestão empresarial (CRM, Stock, Vendas, Dívidas, Equipa, Relatórios)
           draft: false
           prerelease: false
         env:
@@ -96,15 +111,17 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/FlowCash-v1.0-release.apk
+          files: |
+            app/build/outputs/apk/pro/release/FlowCash-PRO-v1.2-release.apk
+            app/build/outputs/apk/business/release/FlowCash-BUSINESS-v1.2-release.apk
           name: Build #${{ github.run_number }}
           tag_name: build-${{ github.run_number }}
           body: |
             Build automático gerado a partir do branch **main**.
 
-            ### APK
-            - Anexado automaticamente pela pipeline CI/CD.
-            - Apenas instalar no dispositivo Android (minSdk 24).
+            ### APKs
+            - `FlowCash-PRO-v1.2-release.apk` — Versão PRO
+            - `FlowCash-BUSINESS-v1.2-release.apk` — Versão BUSINESS
           draft: false
           prerelease: true
         env:

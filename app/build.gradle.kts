@@ -9,12 +9,27 @@ android {
   namespace = "com.zacariasthequimo.flowcash"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
+  flavorDimensions += "version"
+
+  productFlavors {
+    create("pro") {
+      dimension = "version"
+      applicationId = "com.zacariasthequimo.flowcash"
+      versionName = "1.2.0"
+    }
+    create("business") {
+      dimension = "version"
+      applicationId = "com.zacariasthequimo.flowcash.business"
+      versionName = "1.2.0"
+    }
+  }
+
   defaultConfig {
     applicationId = "com.zacariasthequimo.flowcash"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
-    versionName = "1.0"
+    versionName = "1.2.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

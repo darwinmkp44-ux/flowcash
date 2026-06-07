@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
-class FinanceViewModel(application: Application) : AndroidViewModel(application) {
+open class FinanceViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
     private val repository = FinanceRepository(
