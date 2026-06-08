@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -57,7 +56,7 @@ fun NewTransactionScreen(
                         "Nova Transação",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
@@ -80,7 +79,7 @@ fun NewTransactionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
@@ -103,7 +102,7 @@ fun NewTransactionScreen(
                 ) {
                     Text(
                         text = "MZN",
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 32.sp),
+                        style = MaterialTheme.typography.displayLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.padding(end = 8.dp)
                     )
@@ -119,13 +118,12 @@ fun NewTransactionScreen(
                         placeholder = {
                             Text(
                                 "0,00",
-                                style = MaterialTheme.typography.displayLarge.copy(fontSize = 32.sp),
+                                style = MaterialTheme.typography.displayLarge,
                                 color = MaterialTheme.colorScheme.outlineVariant,
                                 textAlign = TextAlign.Center
                             )
                         },
                         textStyle = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 38.sp,
                             color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center
                         ),
@@ -150,9 +148,9 @@ fun NewTransactionScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)), CircleShape)
+                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)), RoundedCornerShape(12.dp))
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -175,7 +173,7 @@ fun NewTransactionScreen(
                         .weight(1f)
                         .height(48.dp)
                         .testTag("type_despesa"),
-                    shape = CircleShape,
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Row(
@@ -185,13 +183,13 @@ fun NewTransactionScreen(
                         Icon(
                             imageVector = Icons.Default.TrendingDown,
                             contentDescription = null,
-                            tint = if (type == "DESPESA") Color(0xFFB91C1C) else despesaTextColor
+                            tint = if (type == "DESPESA") MaterialTheme.colorScheme.error else despesaTextColor
                         )
                         Text(
                             text = "DESPESA",
                             style = MaterialTheme.typography.labelLarge,
                             color = despesaTextColor,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -215,7 +213,7 @@ fun NewTransactionScreen(
                         .weight(1f)
                         .height(48.dp)
                         .testTag("type_receita"),
-                    shape = CircleShape,
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Row(
@@ -225,13 +223,13 @@ fun NewTransactionScreen(
                         Icon(
                             imageVector = Icons.Default.TrendingUp,
                             contentDescription = null,
-                            tint = if (type == "RECEITA") Color(0xFF15803D) else receitaTextColor
+                            tint = if (type == "RECEITA") MaterialTheme.colorScheme.secondary else receitaTextColor
                         )
                         Text(
                             text = "RECEITA",
                             style = MaterialTheme.typography.labelLarge,
                             color = receitaTextColor,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -276,7 +274,7 @@ fun NewTransactionScreen(
                                 }
                                 .testTag("cat_card_$cat"),
                             colors = CardDefaults.cardColors(containerColor = catBgColor),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             border = BorderStroke(1.dp, catOutlineColor)
                         ) {
                             Column(
@@ -301,13 +299,13 @@ fun NewTransactionScreen(
                                     imageVector = catIcon,
                                     contentDescription = cat,
                                     tint = iconColor,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                                 Text(
                                     text = cat,
                                     style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
@@ -372,7 +370,7 @@ fun NewTransactionScreen(
                     .fillMaxWidth()
                     .height(56.dp)
                     .testTag("save_transaction_button"),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -381,7 +379,7 @@ fun NewTransactionScreen(
                 Text(
                     text = "Salvar",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

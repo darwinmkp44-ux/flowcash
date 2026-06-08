@@ -1,10 +1,7 @@
 package com.zacariasthequimo.flowcash.ui.screens
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.ui.BusinessViewModel
 import com.zacariasthequimo.flowcash.ui.UserAvatar
 import java.text.NumberFormat
@@ -47,45 +43,19 @@ fun BusinessDashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        UserAvatar(photoPath = profilePhotoPath, userName = userName)
-                        Column {
-                            Text("Bom dia,", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(userName, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp))
-                        }
-                    }
-                },
+                title = { Text("Resumo", style = MaterialTheme.typography.headlineMedium) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNewSale,
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Nova Venda") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp)
             )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
             item {
-                Text(
-                    "Painel Empresarial",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-
-            item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     DashboardCard(
                         modifier = Modifier.weight(1f),
                         title = "Hoje",
@@ -95,7 +65,7 @@ fun BusinessDashboardScreen(
                     )
                     DashboardCard(
                         modifier = Modifier.weight(1f),
-                        title = "Este Mês",
+                        title = "Este M\u00eas",
                         value = "${nf.format(monthRevenue)} MT",
                         icon = Icons.Outlined.DateRange,
                         color = MaterialTheme.colorScheme.tertiary
@@ -104,7 +74,7 @@ fun BusinessDashboardScreen(
             }
 
             item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     DashboardCard(
                         modifier = Modifier.weight(1f),
                         title = "Vendas",
@@ -123,20 +93,20 @@ fun BusinessDashboardScreen(
             }
 
             item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     DashboardCard(
                         modifier = Modifier.weight(1f),
                         title = "Lucro Bruto",
                         value = "${nf.format(grossProfit)} MT",
                         icon = Icons.Outlined.TrendingUp,
-                        color = Color(0xFF22C55E)
+                        color = MaterialTheme.colorScheme.secondary
                     )
                     DashboardCard(
                         modifier = Modifier.weight(1f),
-                        title = "Dívidas Pend.",
+                        title = "D\u00edvidas Pend.",
                         value = "${nf.format(pendingDebtAmount)} MT",
                         icon = Icons.Outlined.MonetizationOn,
-                        color = Color(0xFFEF4444)
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
@@ -144,16 +114,17 @@ fun BusinessDashboardScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text("Resumo Rápido", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Resumo R\u00e1pido", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(12.dp))
-                        BulletPoint("Receitas do mês: ${nf.format(monthRevenue)} MT", Icons.Outlined.TrendingUp, Color(0xFF22C55E))
+                        BulletPoint("Receitas do m\u00eas: ${nf.format(monthRevenue)} MT", Icons.Outlined.TrendingUp, MaterialTheme.colorScheme.secondary)
                         BulletPoint("Vendas realizadas: $monthSalesCount", Icons.Outlined.ShoppingCart, MaterialTheme.colorScheme.primary)
                         BulletPoint("Clientes registados: $totalCustomers", Icons.Outlined.People, MaterialTheme.colorScheme.tertiary)
-                        BulletPoint("Dívidas a receber: ${nf.format(pendingDebtAmount)} MT", Icons.Outlined.MonetizationOn, Color(0xFFEF4444))
+                        BulletPoint("D\u00edvidas a receber: ${nf.format(pendingDebtAmount)} MT", Icons.Outlined.MonetizationOn, MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -171,15 +142,15 @@ private fun DashboardCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.height(12.dp))
+        Column(modifier = Modifier.padding(14.dp)) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.height(10.dp))
             Text(title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -191,7 +162,7 @@ private fun BulletPoint(text: String, icon: ImageVector, color: Color) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

@@ -3,10 +3,8 @@ package com.zacariasthequimo.flowcash.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -58,7 +55,6 @@ fun HomeScreen(
 
     val currentBalance = totalIncome - totalExpenses - poupancaSum
 
-    // Format currency to MZN style (e.g. 145.280,00)
     val numberFormat = NumberFormat.getNumberInstance(Locale("pt", "MZ")).apply {
         minimumFractionDigits = 2
         maximumFractionDigits = 2
@@ -70,7 +66,7 @@ fun HomeScreen(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         UserAvatar(
                             photoPath = profilePhotoPath,
@@ -79,15 +75,12 @@ fun HomeScreen(
                         Column {
                             Text(
                                 text = "Bom dia,",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = userName,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = (-0.5).sp
-                                ),
+                                style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -112,7 +105,7 @@ fun HomeScreen(
                 onClick = onNavigateToNewTransaction,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .padding(bottom = 16.dp, end = 8.dp)
                     .testTag("add_transaction_fab")
@@ -130,24 +123,23 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            // MAIN BALANCE CARD (SALDO TOTAL) - Styled with Clean Minimalism design rules
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    shape = RoundedCornerShape(32.dp),
+                        .padding(top = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(28.dp)
+                        modifier = Modifier.padding(20.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -156,19 +148,14 @@ fun HomeScreen(
                         ) {
                             Text(
                                 text = "SALDO TOTAL",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    letterSpacing = 1.sp
-                                ),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.SemiBold
                             )
-                            Button(
+                            TextButton(
                                 onClick = { viewModel.toggleBalanceVisibility() },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.08f)
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                modifier = Modifier.height(32.dp)
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(28.dp)
                             ) {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -177,20 +164,20 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = if (isBalanceVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                                         contentDescription = "Ocultar/Mostrar saldo",
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.size(16.dp)
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(14.dp)
                                     )
                                     Text(
                                         text = if (isBalanceVisible) "Ocultar" else "Mostrar",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Row(
                             verticalAlignment = Alignment.Bottom,
@@ -198,34 +185,27 @@ fun HomeScreen(
                         ) {
                             Text(
                                 text = "MZN",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             if (isBalanceVisible) {
                                 Text(
                                     text = numberFormat.format(currentBalance),
-                                    style = MaterialTheme.typography.displayLarge.copy(
-                                        fontSize = 32.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = (-0.5).sp
-                                    ),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    style = MaterialTheme.typography.displayLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             } else {
                                 Text(
                                     text = "••••••",
-                                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 32.sp),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.blur(2.dp)
+                                    style = MaterialTheme.typography.displayLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
 
-                        // Real month-over-month trend
                         val trendInfo = remember(transactions) {
                             val now = System.currentTimeMillis()
                             val cal = java.util.Calendar.getInstance()
@@ -249,33 +229,32 @@ fun HomeScreen(
 
                         Row(
                             modifier = Modifier
-                                .padding(top = 16.dp)
-                                .clip(RoundedCornerShape(100.dp))
-                                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.4f))
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                .padding(top = 12.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f))
+                                .padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Icon(
                                 imageVector = if (trendInfo.second) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
                                 contentDescription = null,
-                                tint = if (trendInfo.second) Color(0xFF15803D) else Color(0xFFB91C1C),
-                                modifier = Modifier.size(14.dp)
+                                tint = if (trendInfo.second) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(12.dp)
                             )
                             Text(
                                 text = if (trendInfo.second) "+${"%.1f".format(trendInfo.third)}% este mês" else "-${"%.1f".format(trendInfo.third)}% este mês",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (trendInfo.second) Color(0xFF166534) else Color(0xFFB91C1C),
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (trendInfo.second) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // Rendimentos reais
                             val incomeGrowth = remember(transactions) {
                                 val now = System.currentTimeMillis()
                                 val cal = java.util.Calendar.getInstance()
@@ -297,46 +276,45 @@ fun HomeScreen(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.05f))
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
                                     .padding(12.dp)
                             ) {
                                 Column {
                                     Text(
                                         text = "RENDIMENTOS",
-                                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 9.sp),
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = if (incomeGrowth >= 0) "+${"%.1f".format(incomeGrowth)}%" else "${"%.1f".format(incomeGrowth)}%",
                                         style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
 
-                            // Economia real
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.05f))
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
                                     .padding(12.dp)
                             ) {
                                 Column {
                                     Text(
                                         text = "ECONOMIA",
-                                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 9.sp),
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = "${"%.0f".format(economiaPct)}%",
                                         style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -345,141 +323,144 @@ fun HomeScreen(
                 }
             }
 
-            // SUMMARY GRID (ENTRADAS / SAÍDAS / POUPANÇA)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Entradas
                     Card(
                         modifier = Modifier.weight(1f),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
-                                contentAlignment = Alignment.Center
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.TrendingUp,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.TrendingUp,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "Entradas",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "Entradas",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = formatKValue(totalIncome),
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
 
-                    // Saídas
                     Card(
                         modifier = Modifier.weight(1f),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)),
-                                contentAlignment = Alignment.Center
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.TrendingDown,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(18.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.TrendingDown,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "Saídas",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "Saídas",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = formatKValue(totalExpenses),
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
 
-                    // Poupança
                     Card(
                         modifier = Modifier.weight(1f),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
-                                contentAlignment = Alignment.Center
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Savings,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Savings,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "Poupança",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "Poupança",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = formatKValue(poupancaSum),
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
                 }
             }
 
-            // FINANCIAL CHART SECTION (Evolução Financeira)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f))
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -489,18 +470,17 @@ fun HomeScreen(
                                 text = "Evolução financeira",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "Últimos 30 dias",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                        // Daily Income vs Expenses Bar Chart (last 7 days)
                         val dailyBars = remember(transactions) {
                             val cal = java.util.Calendar.getInstance()
                             val today = java.util.Calendar.getInstance()
@@ -524,10 +504,13 @@ fun HomeScreen(
 
                         val maxBarValue = dailyBars.maxOfOrNull { maxOf(it.first, it.second) }?.coerceAtLeast(1.0) ?: 1.0
 
+                        val incomeColor = MaterialTheme.colorScheme.primaryContainer
+                        val expenseColor = MaterialTheme.colorScheme.error
+
                         Canvas(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(150.dp)
+                                .height(140.dp)
                         ) {
                             val w = size.width
                             val h = size.height
@@ -542,18 +525,16 @@ fun HomeScreen(
                                 val expHeight = (exp / maxBarValue * h * 0.8f).toFloat()
                                 val baseY = h * 0.9f
 
-                                // Income bar (green)
                                 if (incHeight > 0f) {
                                     drawRect(
-                                        color = Color(0xFF22C55E),
+                                        color = incomeColor,
                                         topLeft = Offset(x, baseY - incHeight),
                                         size = Size(halfBar, incHeight)
                                     )
                                 }
-                                // Expense bar (red)
                                 if (expHeight > 0f) {
                                     drawRect(
-                                        color = Color(0xFFEF4444),
+                                        color = expenseColor,
                                         topLeft = Offset(x + halfBar, baseY - expHeight),
                                         size = Size(halfBar, expHeight)
                                     )
@@ -568,23 +549,22 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFF22C55E)))
-                                    Text("Receitas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer))
+                                    Text("Receitas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(Color(0xFFEF4444)))
-                                    Text("Despesas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.error))
+                                    Text("Despesas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                            Text("Últimos 7 dias", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                            Text("Últimos 7 dias", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                         }
                     }
                 }
             }
 
-            // RECENT TRANSACTIONS HEADER
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -595,25 +575,25 @@ fun HomeScreen(
                         text = "Transações recentes",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                     TextButton(onClick = onNavigateToHistory) {
                         Text(
                             text = "Ver tudo",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
 
-            // RENDER RECENT TRANSACTIONS
             if (transactions.isEmpty()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(24.dp).fillMaxWidth(),
@@ -622,8 +602,8 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Default.ReceiptLong,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                modifier = Modifier.size(48.dp)
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                modifier = Modifier.size(40.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -653,26 +633,25 @@ fun TransactionItem(tx: Transaction) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Detail if any */ },
-        shape = RoundedCornerShape(16.dp),
+            .clickable { },
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                // Category icon selector
                 val icon = when (tx.category.lowercase()) {
                     "compras" -> Icons.Default.ShoppingCart
                     "alimentação" -> Icons.Default.Restaurant
@@ -686,24 +665,17 @@ fun TransactionItem(tx: Transaction) {
                     else -> Icons.Default.Category
                 }
 
-                // Clean Minimalist categorical colors matching Design spec
                 val isReceita = tx.type == "RECEITA"
                 val (iconBg, iconColor) = if (isReceita) {
-                    Color(0xFFDCFCE7) to Color(0xFF15803D) // green-100 to green-700
+                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.secondary
                 } else {
-                    when (tx.category.lowercase()) {
-                        "compras" -> Color(0xFFFFEDD5) to Color(0xFFC2410C) // orange-100 to orange-700
-                        "alimentação" -> Color(0xFFFEE2E2) to Color(0xFFB91C1C) // red-100 to red-700
-                        "transporte" -> Color(0xFFFEF9C3) to Color(0xFFA16207) // yellow-100 to yellow-800
-                        "utilidades" -> Color(0xFFDBEAFE) to Color(0xFF1D4ED8) // blue-100 to blue-700
-                        else -> Color(0xFFF3F4F9) to Color(0xFF535F70) // gray-100 to gray-700
-                    }
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.error
                 }
 
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(iconBg),
                     contentAlignment = Alignment.Center
                 ) {
@@ -711,7 +683,7 @@ fun TransactionItem(tx: Transaction) {
                         imageVector = icon,
                         contentDescription = tx.category,
                         tint = iconColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
@@ -720,7 +692,7 @@ fun TransactionItem(tx: Transaction) {
                 ) {
                     Text(
                         text = tx.title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -729,8 +701,8 @@ fun TransactionItem(tx: Transaction) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = tx.description.ifEmpty { tx.category },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -742,20 +714,19 @@ fun TransactionItem(tx: Transaction) {
                 verticalArrangement = Arrangement.Center
             ) {
                 val prefix = if (tx.type == "RECEITA") "+ " else "- "
-                val color = if (tx.type == "RECEITA") Color(0xFF15803D) else MaterialTheme.colorScheme.onSurface
+                val color = if (tx.type == "RECEITA") MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
 
                 Text(
                     text = prefix + numberFormat.format(tx.amount) + " MT",
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = color,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
     }
 }
 
-// Utility to format values like 24.5k to match screenshots exactly
 fun formatKValue(amount: Double): String {
     return if (amount >= 1000.0) {
         val valueInK = amount / 1000.0

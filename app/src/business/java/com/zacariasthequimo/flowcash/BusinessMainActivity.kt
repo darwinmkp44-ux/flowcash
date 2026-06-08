@@ -11,20 +11,22 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -32,35 +34,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import com.zacariasthequimo.flowcash.data.entity.Goal
 import com.zacariasthequimo.flowcash.ui.BusinessViewModel
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
 import com.zacariasthequimo.flowcash.ui.ThemeMode
 import com.zacariasthequimo.flowcash.ui.screens.*
 import com.zacariasthequimo.flowcash.ui.theme.MyApplicationTheme
 
-enum class BusinessTab(
+enum class BizTab(
     val route: String,
     val title: String,
     val activeIcon: ImageVector,
     val inactiveIcon: ImageVector
 ) {
-    DASHBOARD("dashboard", "Painel", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-    CRM("crm", "Clientes", Icons.Filled.People, Icons.Outlined.People),
-    SALES("sales", "Vendas", Icons.Filled.ShoppingCart, Icons.Outlined.ShoppingCart),
-    STOCK("stock", "Stock", Icons.Filled.Inventory2, Icons.Outlined.Inventory2),
-    MORE("more", "Mais", Icons.Filled.MoreHoriz, Icons.Outlined.MoreHoriz)
+    PESSOAL("pessoal", "Pessoal", Icons.Filled.Person, Icons.Outlined.Person),
+    BUSINESS("business", "Business", Icons.Filled.Business, Icons.Outlined.Business),
+    ADD("add", "", Icons.Filled.Add, Icons.Filled.Add),
+    RESUMO("resumo", "Resumo", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
+    DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings)
 }
 
-enum class BusinessSubScreen(
-    val title: String,
-    val icon: ImageVector
-) {
-    PRODUCTS("Produtos", Icons.Outlined.Sell),
-    DEBTS("Dívidas", Icons.Outlined.MonetizationOn),
-    TEAM("Equipa", Icons.Outlined.Groups),
-    REPORTS("Relatórios", Icons.Outlined.BarChart),
-    FINANCES("Finanças Pessoais", Icons.Outlined.AccountBalanceWallet),
-    PROFILE("Perfil", Icons.Outlined.Person)
+enum class BusinessBlock(val title: String, val icon: ImageVector, val description: String) {
+    CLIENTES("Clientes", Icons.Outlined.People, "Gerir clientes e contactos"),
+    VENDAS("Vendas", Icons.Outlined.ShoppingCart, "Registar e acompanhar vendas"),
+    DIVIDAS("D\u00edvidas", Icons.Outlined.MonetizationOn, "Controlo de d\u00edvidas"),
+    PRODUTOS("Produtos", Icons.Outlined.Inventory2, "Stock e produtos"),
+    AGENDA("Agenda", Icons.Outlined.CalendarMonth, "Compromissos e lembretes"),
+    MODULOS("M\u00f3dulos", Icons.Outlined.Extension, "Ativar/desativar m\u00f3dulos"),
+    RELATORIOS("Relat\u00f3rios", Icons.Outlined.BarChart, "Lucros e desempenho")
 }
 
 class BusinessMainActivity : ComponentActivity() {
@@ -123,49 +124,34 @@ fun BusinessOrchestrator(
     val context = LocalContext.current
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) { /* user granted or denied */ }
+    ) { }
 
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                != android.content.pm.PackageManager.PERMISSION_GRANTED
+                != PackageManager.PERMISSION_GRANTED
             ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
 
-    var activeTab by remember { mutableStateOf(BusinessTab.DASHBOARD) }
+    var activeTab by remember { mutableStateOf(BizTab.PESSOAL) }
     var isAddingTransaction by remember { mutableStateOf(false) }
-    var showMoreMenu by remember { mutableStateOf(false) }
-    var subScreen by remember { mutableStateOf<BusinessSubScreen?>(null) }
+    var activeBlock by remember { mutableStateOf<BusinessBlock?>(null) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
 
-    val activeSubScreen = subScreen != null || showAccountDetail || showSecurity || showExport
+    val activeSubScreen = activeBlock != null || showAccountDetail || showSecurity || showExport
 
     Scaffold(
         topBar = {
-            if (showMoreMenu || subScreen != null) {
+            if (activeBlock != null) {
                 TopAppBar(
-                    title = {
-                        Text(
-                            subScreen?.title ?: "Mais",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.5).sp
-                            )
-                        )
-                    },
+                    title = { Text(activeBlock!!.title, style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            subScreen = null
-                            showMoreMenu = false
-                            showAccountDetail = false
-                            showSecurity = false
-                            showExport = false
-                        }) {
+                        IconButton(onClick = { activeBlock = null }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                         }
                     },
@@ -176,43 +162,74 @@ fun BusinessOrchestrator(
             }
         },
         bottomBar = {
-            if (!isAddingTransaction && !activeSubScreen && !showMoreMenu) {
+            if (!isAddingTransaction && !activeSubScreen) {
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp
                 ) {
-                    BusinessTab.entries.forEach { tab ->
+                    BizTab.entries.forEachIndexed { index, tab ->
                         val isSelected = activeTab == tab
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                activeTab = tab
-                                if (tab == BusinessTab.MORE) showMoreMenu = true
-                            },
-                            icon = {
-                                Icon(
-                                    if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                                    contentDescription = tab.title,
-                                    modifier = Modifier.size(24.dp)
+
+                        if (tab == BizTab.ADD) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 4.dp)
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .clickable { isAddingTransaction = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                FloatingActionButton(
+                                    onClick = { isAddingTransaction = true },
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(48.dp),
+                                    shape = CircleShape,
+                                    elevation = FloatingActionButtonDefaults.elevation(
+                                        defaultElevation = 4.dp
+                                    )
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Add,
+                                        contentDescription = "Nova Transa\u00e7\u00e3o",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        } else {
+                            NavigationBarItem(
+                                selected = isSelected,
+                                onClick = { activeTab = tab },
+                                icon = {
+                                    Icon(
+                                        if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                                        contentDescription = tab.title,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        tab.title,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                            fontSize = 10.sp
+                                        )
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
-                            },
-                            label = {
-                                Text(
-                                    tab.title,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
                             )
-                        )
+                        }
                     }
                 }
             }
-        },
-        containerColor = MaterialTheme.colorScheme.background
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -220,24 +237,16 @@ fun BusinessOrchestrator(
                 .padding(innerPadding)
         ) {
             when {
-                showMoreMenu -> {
-                    MoreMenu(
-                        onSelect = { screen ->
-                            subScreen = screen
-                            showMoreMenu = false
-                        }
+                isAddingTransaction -> {
+                    NewTransactionScreen(
+                        viewModel = viewModel,
+                        onNavigateBack = { isAddingTransaction = false }
                     )
                 }
-                subScreen != null -> {
-                    BusinessSubScreenContent(
-                        screen = subScreen!!,
-                        viewModel = viewModel,
-                        isDarkMode = isDarkMode,
-                        themeMode = themeMode,
-                        onSetThemeMode = onSetThemeMode,
-                        showAccountDetail = { showAccountDetail = true },
-                        showSecurity = { showSecurity = true },
-                        showExport = { showExport = true }
+                activeBlock != null -> {
+                    BusinessBlockContent(
+                        block = activeBlock!!,
+                        viewModel = viewModel
                     )
                 }
                 showAccountDetail -> {
@@ -258,38 +267,36 @@ fun BusinessOrchestrator(
                         onBack = { showExport = false }
                     )
                 }
-                isAddingTransaction -> {
-                    NewTransactionScreen(
-                        viewModel = viewModel,
-                        onNavigateBack = { isAddingTransaction = false }
-                    )
-                }
                 else -> {
                     when (activeTab) {
-                        BusinessTab.DASHBOARD -> {
+                        BizTab.PESSOAL -> {
+                            ProFinances(
+                                viewModel = viewModel,
+                                onNavigateToNewTransaction = { isAddingTransaction = true }
+                            )
+                        }
+                        BizTab.BUSINESS -> {
+                            BusinessBlocksScreen(
+                                viewModel = viewModel,
+                                onBlockClick = { activeBlock = it }
+                            )
+                        }
+                        BizTab.ADD -> {}
+                        BizTab.RESUMO -> {
                             BusinessDashboardScreen(
                                 viewModel = viewModel,
-                                onNewSale = { activeTab = BusinessTab.SALES }
+                                onNewSale = { activeBlock = BusinessBlock.VENDAS }
                             )
                         }
-                        BusinessTab.CRM -> {
-                            CrmScreen(viewModel = viewModel)
-                        }
-                        BusinessTab.SALES -> {
-                            SaleScreen(
+                        BizTab.DEFINICOES -> {
+                            ProfileScreen(
                                 viewModel = viewModel,
-                                onNewSale = { isAddingTransaction = false }
-                            )
-                        }
-                        BusinessTab.STOCK -> {
-                            ProductScreen(viewModel = viewModel)
-                        }
-                        BusinessTab.MORE -> {
-                            MoreMenu(
-                                onSelect = { screen ->
-                                    subScreen = screen
-                                    showMoreMenu = false
-                                }
+                                isDarkMode = isDarkMode,
+                                themeMode = themeMode,
+                                onSetThemeMode = onSetThemeMode,
+                                onNavigateToAccount = { showAccountDetail = true },
+                                onNavigateToSecurity = { showSecurity = true },
+                                onNavigateToExport = { showExport = true }
                             )
                         }
                     }
@@ -300,106 +307,41 @@ fun BusinessOrchestrator(
 }
 
 @Composable
-fun MoreMenu(onSelect: (BusinessSubScreen) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            "Mais Opções",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp
-            ),
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        BusinessSubScreen.entries.forEach { screen ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect(screen) },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Icon(
-                        screen.icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Text(
-                        screen.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun BusinessSubScreenContent(
-    screen: BusinessSubScreen,
-    viewModel: BusinessViewModel,
-    isDarkMode: Boolean,
-    themeMode: ThemeMode,
-    onSetThemeMode: (ThemeMode) -> Unit,
-    showAccountDetail: () -> Unit,
-    showSecurity: () -> Unit,
-    showExport: () -> Unit
+fun BusinessBlockContent(
+    block: BusinessBlock,
+    viewModel: BusinessViewModel
 ) {
-    when (screen) {
-        BusinessSubScreen.PRODUCTS -> ProductScreen(viewModel = viewModel)
-        BusinessSubScreen.DEBTS -> DebtScreen(viewModel = viewModel)
-        BusinessSubScreen.TEAM -> TeamScreen(viewModel = viewModel)
-        BusinessSubScreen.REPORTS -> ProfitLossScreen(viewModel = viewModel)
-        BusinessSubScreen.FINANCES -> ProFinances(viewModel = viewModel)
-        BusinessSubScreen.PROFILE -> {
-            ProfileScreen(
-                viewModel = viewModel,
-                isDarkMode = isDarkMode,
-                themeMode = themeMode,
-                onSetThemeMode = onSetThemeMode,
-                onNavigateToAccount = showAccountDetail,
-                onNavigateToSecurity = showSecurity,
-                onNavigateToExport = showExport
-            )
-        }
+    when (block) {
+        BusinessBlock.CLIENTES -> CrmScreen(viewModel = viewModel)
+        BusinessBlock.VENDAS -> SaleScreen(viewModel = viewModel, onNewSale = { })
+        BusinessBlock.DIVIDAS -> DebtScreen(viewModel = viewModel)
+        BusinessBlock.PRODUTOS -> ProductScreen(viewModel = viewModel)
+        BusinessBlock.AGENDA -> AgendaScreen()
+        BusinessBlock.MODULOS -> ModulesScreen()
+        BusinessBlock.RELATORIOS -> ProfitLossScreen(viewModel = viewModel)
     }
 }
 
 @Composable
-fun ProFinances(viewModel: FinanceViewModel) {
+fun ProFinances(
+    viewModel: FinanceViewModel,
+    onNavigateToNewTransaction: () -> Unit
+) {
     var activeProTab by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            listOf("Home", "Histórico", "Metas", "Gráficos").forEachIndexed { i, title ->
+            val tabs = listOf("Home", "Hist\u00f3rico", "Metas", "Gr\u00e1ficos")
+            tabs.forEachIndexed { i, title ->
                 FilterChip(
                     selected = activeProTab == i,
                     onClick = { activeProTab = i },
-                    label = { Text(title, fontSize = 12.sp) }
+                    label = { Text(title, style = MaterialTheme.typography.labelLarge) }
                 )
             }
         }
@@ -408,7 +350,7 @@ fun ProFinances(viewModel: FinanceViewModel) {
             when (activeProTab) {
                 0 -> HomeScreen(
                     viewModel = viewModel,
-                    onNavigateToNewTransaction = {},
+                    onNavigateToNewTransaction = onNavigateToNewTransaction,
                     onNavigateToHistory = { activeProTab = 1 }
                 )
                 1 -> HistoryScreen(viewModel = viewModel)

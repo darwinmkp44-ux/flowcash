@@ -12,27 +12,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = FlowInversePrimary,
-    onPrimary = FlowOnPrimary,
-    primaryContainer = Color(0xFF1A3A5C),
-    onPrimaryContainer = FlowPrimaryContainer,
-    secondary = FlowSecondary,
-    onSecondary = FlowOnSecondary,
-    secondaryContainer = Color(0xFF2A2D38),
-    onSecondaryContainer = FlowSecondaryContainer,
+    primary = FlowDarkPrimary,
+    onPrimary = FlowDarkOnPrimary,
+    primaryContainer = FlowDarkPrimaryContainer,
+    onPrimaryContainer = FlowDarkOnPrimaryContainer,
+    secondary = FlowDarkSecondary,
+    onSecondary = FlowDarkOnSecondary,
+    secondaryContainer = FlowDarkSecondaryContainer,
+    onSecondaryContainer = FlowDarkOnSecondaryContainer,
+    tertiary = FlowDarkTertiary,
+    onTertiary = FlowDarkOnTertiary,
+    tertiaryContainer = FlowDarkTertiaryContainer,
+    onTertiaryContainer = FlowDarkOnTertiaryContainer,
     background = FlowDarkBackground,
-    onBackground = FlowDarkOnSurface,
+    onBackground = FlowDarkOnBackground,
     surface = FlowDarkSurface,
     onSurface = FlowDarkOnSurface,
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    outline = Color(0xFF8E9099),
-    outlineVariant = Color(0xFF44474E),
+    onSurfaceVariant = FlowDarkOnSurfaceVariant,
+    surfaceVariant = FlowDarkSurfaceVariant,
+    surfaceDim = FlowDarkSurfaceDim,
+    surfaceBright = FlowDarkSurfaceBright,
     surfaceContainerLowest = FlowDarkSurfaceContainerLowest,
     surfaceContainerLow = FlowDarkSurfaceContainerLow,
     surfaceContainer = FlowDarkSurfaceContainer,
     surfaceContainerHigh = FlowDarkSurfaceContainerHigh,
-    surfaceContainerHighest = FlowDarkSurfaceContainerHighest
+    surfaceContainerHighest = FlowDarkSurfaceContainerHighest,
+    error = FlowDarkError,
+    onError = FlowDarkOnError,
+    errorContainer = FlowDarkErrorContainer,
+    onErrorContainer = FlowDarkOnErrorContainer,
+    outline = FlowDarkOutline,
+    outlineVariant = FlowDarkOutlineVariant,
+    inverseSurface = FlowDarkInverseSurface,
+    inverseOnSurface = FlowDarkInverseOnSurface,
+    inversePrimary = FlowDarkInversePrimary
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -44,25 +57,38 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = FlowOnSecondary,
     secondaryContainer = FlowSecondaryContainer,
     onSecondaryContainer = FlowOnSecondaryContainer,
+    tertiary = FlowTertiary,
+    onTertiary = FlowOnTertiary,
+    tertiaryContainer = FlowTertiaryContainer,
+    onTertiaryContainer = FlowOnTertiaryContainer,
     background = FlowBackground,
     onBackground = FlowOnBackground,
     surface = FlowSurface,
     onSurface = FlowOnSurface,
-    error = FlowError,
-    onError = FlowOnError,
-    outline = FlowOutline,
-    outlineVariant = FlowOutlineVariant,
+    onSurfaceVariant = FlowOnSurfaceVariant,
+    surfaceVariant = FlowSurfaceVariant,
+    surfaceDim = FlowSurfaceDim,
+    surfaceBright = FlowSurfaceBright,
     surfaceContainerLowest = FlowSurfaceContainerLowest,
     surfaceContainerLow = FlowSurfaceContainerLow,
-    surfaceContainer = FlowSurfaceContainerLow, // Set as FlowSurfaceContainerLow (i.e. #f3f4f9) for matching clean design
+    surfaceContainer = FlowSurfaceContainer,
     surfaceContainerHigh = FlowSurfaceContainerHigh,
-    surfaceContainerHighest = FlowSurfaceContainerHighest
+    surfaceContainerHighest = FlowSurfaceContainerHighest,
+    error = FlowError,
+    onError = FlowOnError,
+    errorContainer = FlowErrorContainer,
+    onErrorContainer = FlowOnErrorContainer,
+    outline = FlowOutline,
+    outlineVariant = FlowOutlineVariant,
+    inverseSurface = FlowInverseSurface,
+    inverseOnSurface = FlowInverseOnSurface,
+    inversePrimary = FlowInversePrimary
 )
 
 @Composable
 fun MyApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Set to false to force our custom beautiful emerald branding consistently
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {

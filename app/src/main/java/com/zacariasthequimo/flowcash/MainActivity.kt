@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
@@ -43,7 +44,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Initialize the central FinanceViewModel
         val viewModel = ViewModelProvider(this)[FinanceViewModel::class.java]
 
         setContent {
@@ -127,7 +127,8 @@ fun AppOrchestrator(
         bottomBar = {
             if (!isAddingTransaction && !activeSubScreen) {
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp,
                     modifier = Modifier.testTag("bottom_nav_bar")
                 ) {
                     BottomNavTab.entries.forEach { tab ->
@@ -145,14 +146,18 @@ fun AppOrchestrator(
                             label = {
                                 Text(
                                     text = tab.title,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        fontSize = 10.sp
+                                    )
                                 )
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             ),
                             modifier = Modifier.testTag("nav_item_${tab.route}")
                         )

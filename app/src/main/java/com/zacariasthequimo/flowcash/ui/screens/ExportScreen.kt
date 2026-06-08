@@ -1,7 +1,6 @@
 package com.zacariasthequimo.flowcash.ui.screens
 
 import android.content.Intent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -46,7 +45,7 @@ fun ExportScreen(
                         "Exportar Dados",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
@@ -69,7 +68,7 @@ fun ExportScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Spacer(Modifier.height(8.dp))
@@ -97,7 +96,7 @@ fun ExportScreen(
                             exportMessage,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -122,11 +121,11 @@ fun ExportScreen(
             // Export Transactions
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -149,7 +148,7 @@ fun ExportScreen(
                             Text(
                                 "Transações",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 "${transactions.size} registos",
@@ -174,7 +173,7 @@ fun ExportScreen(
                         shape = RoundedCornerShape(12.dp),
                         enabled = transactions.isNotEmpty() && exportState != "exporting"
                     ) {
-                        Text("Exportar", fontWeight = FontWeight.Bold)
+                        Text("Exportar", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -182,11 +181,11 @@ fun ExportScreen(
             // Export Goals
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                 ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -209,7 +208,7 @@ fun ExportScreen(
                             Text(
                                 "Metas",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 "${goals.size} metas",
@@ -234,7 +233,7 @@ fun ExportScreen(
                         shape = RoundedCornerShape(12.dp),
                         enabled = goals.isNotEmpty() && exportState != "exporting"
                     ) {
-                        Text("Exportar", fontWeight = FontWeight.Bold)
+                        Text("Exportar", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -242,11 +241,11 @@ fun ExportScreen(
             // Export All
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                 ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -269,7 +268,7 @@ fun ExportScreen(
                             Text(
                                 "Exportar Tudo",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 "Transações + Metas",
@@ -294,7 +293,7 @@ fun ExportScreen(
                         shape = RoundedCornerShape(12.dp),
                         enabled = (transactions.isNotEmpty() || goals.isNotEmpty()) && exportState != "exporting"
                     ) {
-                        Text("Exportar", fontWeight = FontWeight.Bold)
+                        Text("Exportar", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

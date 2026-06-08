@@ -2,7 +2,6 @@ package com.zacariasthequimo.flowcash.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -92,10 +91,7 @@ fun AnalyticsScreen(
                         )
                         Text(
                             "Estatísticas",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = (-0.5).sp
-                            ),
+                            style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -120,7 +116,7 @@ fun AnalyticsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
@@ -141,14 +137,14 @@ fun AnalyticsScreen(
                             text = "Estatísticas",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
                             .padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -170,7 +166,7 @@ fun AnalyticsScreen(
                                     text = period,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = periodTextColorColors,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
@@ -186,9 +182,9 @@ fun AnalyticsScreen(
                     // Total Income Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -203,15 +199,15 @@ fun AnalyticsScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFDCFCE7)),
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.TrendingUp,
                                         contentDescription = null,
-                                        tint = Color(0xFF15803D)
+                                        tint = MaterialTheme.colorScheme.secondary
                                     )
                                 }
                                 Column {
@@ -222,9 +218,9 @@ fun AnalyticsScreen(
                                     )
                                     Text(
                                         "MZN " + numberFormat.format(totalIncome),
-                                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -232,7 +228,7 @@ fun AnalyticsScreen(
                                 if (incomeChange >= 0) "+${"%.1f".format(incomeChange)}%" else "${"%.1f".format(incomeChange)}%",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (incomeChange >= 0) Color(0xFF15803D) else Color(0xFFB91C1C),
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -240,9 +236,9 @@ fun AnalyticsScreen(
                     // Total Expenses Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -257,15 +253,15 @@ fun AnalyticsScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFFEE2E2)),
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.TrendingDown,
                                         contentDescription = null,
-                                        tint = Color(0xFFB91C1C)
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 }
                                 Column {
@@ -276,9 +272,9 @@ fun AnalyticsScreen(
                                     )
                                     Text(
                                         "MZN " + numberFormat.format(totalExpenses),
-                                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -286,7 +282,7 @@ fun AnalyticsScreen(
                                 if (expenseChange >= 0) "+${"%.1f".format(expenseChange)}%" else "${"%.1f".format(expenseChange)}%",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (expenseChange <= 0) Color(0xFF15803D) else Color(0xFFB91C1C),
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -294,9 +290,9 @@ fun AnalyticsScreen(
                     // Net Balance Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -311,9 +307,9 @@ fun AnalyticsScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -330,9 +326,9 @@ fun AnalyticsScreen(
                                     )
                                     Text(
                                         "MZN " + numberFormat.format(netBalance),
-                                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -345,7 +341,7 @@ fun AnalyticsScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -358,7 +354,7 @@ fun AnalyticsScreen(
                                 text = "Entradas vs Saídas",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
 
                             // Chart Legend Indicators
@@ -483,7 +479,7 @@ fun AnalyticsScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
                 ) {
                     Column(
@@ -494,7 +490,7 @@ fun AnalyticsScreen(
                             text = "Mix de Gastos",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -525,10 +521,10 @@ fun AnalyticsScreen(
                             Pair("Outros", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", outrosPercent * 100) else "0%")
                         )
                         val legendColors = listOf(
-                            Color(0xFFFF9800),
-                            Color(0xFFF44336),
-                            Color(0xFFFFC107),
-                            Color(0xFF009688)
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.error,
+                            MaterialTheme.colorScheme.tertiary,
+                            MaterialTheme.colorScheme.secondary
                         )
 
                         // Custom Styled Circular Ring Pie Canvas Chart
@@ -536,10 +532,10 @@ fun AnalyticsScreen(
                             modifier = Modifier.size(170.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            val color1 = Color(0xFFFF9800) // Compras - Laranja
-                            val color2 = Color(0xFFF44336) // Alimentação - Vermelho
-                            val color3 = Color(0xFFFFC107) // Transporte - Âmbar
-                            val color4 = Color(0xFF009688) // Outros - Verde Azulado
+                            val color1 = MaterialTheme.colorScheme.primary // Compras - Laranja
+                            val color2 = MaterialTheme.colorScheme.error // Alimentação - Vermelho
+                            val color3 = MaterialTheme.colorScheme.tertiary // Transporte - Âmbar
+                            val color4 = MaterialTheme.colorScheme.secondary // Outros - Verde Azulado
 
                             val strokeWidthVal = 14.dp
 
@@ -604,9 +600,9 @@ fun AnalyticsScreen(
                             ) {
                                 Text(
                                     text = formatKValue(totalExpenses),
-                                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 28.sp),
+                                    style = MaterialTheme.typography.headlineLarge,
                                     color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
                                     text = "TOTAL DESP",
@@ -647,7 +643,7 @@ fun AnalyticsScreen(
                                     Text(
                                         text = pair.second,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
@@ -666,7 +662,7 @@ fun AnalyticsScreen(
                         text = "Insights",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     // Insight real 1: comparacao de despesas
@@ -681,9 +677,9 @@ fun AnalyticsScreen(
                     }
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
@@ -692,24 +688,24 @@ fun AnalyticsScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary),
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Lightbulb,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                             Column {
                                 Text(
                                     text = expInsight,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
@@ -729,9 +725,9 @@ fun AnalyticsScreen(
                         val goalPct = if (topGoal.targetAmount > 0) (topGoal.currentAmount / topGoal.targetAmount * 100) else 0.0
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
@@ -740,24 +736,24 @@ fun AnalyticsScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Savings,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                                 Column {
                                     Text(
                                         text = "Meta \"${topGoal.title}\" em ${"%.0f".format(goalPct)}%",
-                                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(

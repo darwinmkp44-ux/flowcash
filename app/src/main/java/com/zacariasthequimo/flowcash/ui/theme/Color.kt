@@ -2,45 +2,107 @@ package com.zacariasthequimo.flowcash.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Clean Minimalism Palette (Material You influenced Royal Blue)
-val FlowPrimary = Color(0xFF0061A4)
+// iOS-inspired palette - Light
+val FlowPrimary = Color(0xFF0058BC)
 val FlowOnPrimary = Color(0xFFFFFFFF)
-val FlowPrimaryContainer = Color(0xFFD1E4FF)
-val FlowOnPrimaryContainer = Color(0xFF001D36)
+val FlowPrimaryContainer = Color(0xFF0070EB)
+val FlowOnPrimaryContainer = Color(0xFFFEFCFF)
 
-val FlowSecondary = Color(0xFF535F70)
+val FlowSecondary = Color(0xFF006E28)
 val FlowOnSecondary = Color(0xFFFFFFFF)
-val FlowSecondaryContainer = Color(0xFFF3F4F9)
-val FlowOnSecondaryContainer = Color(0xFF1A1C1E)
+val FlowSecondaryContainer = Color(0xFF6FFB85)
+val FlowOnSecondaryContainer = Color(0xFF00732A)
 
-val FlowBackground = Color(0xFFFDFCFF)
-val FlowOnBackground = Color(0xFF1A1C1E)
+val FlowTertiary = Color(0xFF4C4ACA)
+val FlowOnTertiary = Color(0xFFFFFFFF)
+val FlowTertiaryContainer = Color(0xFF6664E4)
+val FlowOnTertiaryContainer = Color(0xFFFFFBFF)
 
-val FlowSurface = Color(0xFFFDFCFF)
-val FlowOnSurface = Color(0xFF1A1C1E)
-val FlowOnSurfaceVariant = Color(0xFF44474E)
+val FlowBackground = Color(0xFFFAF9FE)
+val FlowOnBackground = Color(0xFF1A1B1F)
+
+val FlowSurface = Color(0xFFFAF9FE)
+val FlowOnSurface = Color(0xFF1A1B1F)
+val FlowOnSurfaceVariant = Color(0xFF414755)
+val FlowSurfaceVariant = Color(0xFFE3E2E7)
+
+val FlowSurfaceDim = Color(0xFFDAD9DF)
+val FlowSurfaceBright = Color(0xFFFAF9FE)
 
 val FlowSurfaceContainerLowest = Color(0xFFFFFFFF)
-val FlowSurfaceContainerLow = Color(0xFFF3F4F9)
-val FlowSurfaceContainer = Color(0xFFE2E7ED)
-val FlowSurfaceContainerHigh = Color(0xFFD3DCE5)
-val FlowSurfaceContainerHighest = Color(0xFFC4D1DD)
+val FlowSurfaceContainerLow = Color(0xFFF4F3F8)
+val FlowSurfaceContainer = Color(0xFFEEEDF3)
+val FlowSurfaceContainerHigh = Color(0xFFE9E7ED)
+val FlowSurfaceContainerHighest = Color(0xFFE3E2E7)
 
 val FlowError = Color(0xFFBA1A1A)
 val FlowOnError = Color(0xFFFFFFFF)
 val FlowErrorContainer = Color(0xFFFFDAD6)
 val FlowOnErrorContainer = Color(0xFF93000A)
 
-val FlowOutline = Color(0xFF74777F)
-val FlowOutlineVariant = Color(0xFFE1E2E6)
-val FlowInversePrimary = Color(0xFF9ECAFF)
+val FlowOutline = Color(0xFF717786)
+val FlowOutlineVariant = Color(0xFFC1C6D7)
 
-// Pure Dark Mode colors mapped beautifully
-val FlowDarkBackground = Color(0xFF12141C)
-val FlowDarkSurface = Color(0xFF1A1D26)
-val FlowDarkOnSurface = Color(0xFFE4E4E9)
-val FlowDarkSurfaceContainerLowest = Color(0xFF0F1118)
-val FlowDarkSurfaceContainerLow = Color(0xFF1A1D26)
-val FlowDarkSurfaceContainer = Color(0xFF21242E)
-val FlowDarkSurfaceContainerHigh = Color(0xFF2B2E39)
-val FlowDarkSurfaceContainerHighest = Color(0xFF363945)
+val FlowInverseSurface = Color(0xFF2F3034)
+val FlowInverseOnSurface = Color(0xFFF1F0F5)
+val FlowInversePrimary = Color(0xFFADC6FF)
+
+val FlowPrimaryFixed = Color(0xFFD8E2FF)
+val FlowPrimaryFixedDim = Color(0xFFADC6FF)
+val FlowOnPrimaryFixed = Color(0xFF001A41)
+val FlowOnPrimaryFixedVariant = Color(0xFF004493)
+
+val FlowSecondaryFixed = Color(0xFF72FE88)
+val FlowSecondaryFixedDim = Color(0xFF53E16F)
+val FlowOnSecondaryFixed = Color(0xFF002107)
+val FlowOnSecondaryFixedVariant = Color(0xFF00531C)
+
+val FlowTertiaryFixed = Color(0xFFE2DFFF)
+val FlowTertiaryFixedDim = Color(0xFFC2C1FF)
+val FlowOnTertiaryFixed = Color(0xFF0C006A)
+val FlowOnTertiaryFixedVariant = Color(0xFF3631B4)
+
+// Dark mode palette
+val FlowDarkBackground = Color(0xFF121216)
+val FlowDarkOnBackground = Color(0xFFE3E2E7)
+
+val FlowDarkSurface = Color(0xFF1A1B1F)
+val FlowDarkOnSurface = Color(0xFFE3E2E7)
+val FlowDarkOnSurfaceVariant = Color(0xFFC1C6D7)
+val FlowDarkSurfaceVariant = Color(0xFF414755)
+
+val FlowDarkSurfaceDim = Color(0xFF121216)
+val FlowDarkSurfaceBright = Color(0xFF38393E)
+
+val FlowDarkSurfaceContainerLowest = Color(0xFF0C0D10)
+val FlowDarkSurfaceContainerLow = Color(0xFF1A1B1F)
+val FlowDarkSurfaceContainer = Color(0xFF1E1F23)
+val FlowDarkSurfaceContainerHigh = Color(0xFF28292D)
+val FlowDarkSurfaceContainerHighest = Color(0xFF333438)
+
+val FlowDarkPrimary = Color(0xFFADC6FF)
+val FlowDarkOnPrimary = Color(0xFF002B68)
+val FlowDarkPrimaryContainer = Color(0xFF004493)
+val FlowDarkOnPrimaryContainer = Color(0xFFD8E2FF)
+
+val FlowDarkSecondary = Color(0xFF53E16F)
+val FlowDarkOnSecondary = Color(0xFF003910)
+val FlowDarkSecondaryContainer = Color(0xFF00531C)
+val FlowDarkOnSecondaryContainer = Color(0xFF72FE88)
+
+val FlowDarkTertiary = Color(0xFFC2C1FF)
+val FlowDarkOnTertiary = Color(0xFF1E1A8A)
+val FlowDarkTertiaryContainer = Color(0xFF3631B4)
+val FlowDarkOnTertiaryContainer = Color(0xFFE2DFFF)
+
+val FlowDarkError = Color(0xFFFFB4AB)
+val FlowDarkOnError = Color(0xFF690005)
+val FlowDarkErrorContainer = Color(0xFF93000A)
+val FlowDarkOnErrorContainer = Color(0xFFFFDAD6)
+
+val FlowDarkOutline = Color(0xFF8B919F)
+val FlowDarkOutlineVariant = Color(0xFF414755)
+
+val FlowDarkInverseSurface = Color(0xFFE3E2E7)
+val FlowDarkInverseOnSurface = Color(0xFF2F3034)
+val FlowDarkInversePrimary = Color(0xFF0058BC)

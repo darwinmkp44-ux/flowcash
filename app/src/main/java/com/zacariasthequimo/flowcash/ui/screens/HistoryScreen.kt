@@ -75,10 +75,7 @@ fun HistoryScreen(
                         )
                         Text(
                             "Histórico",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = (-0.5).sp
-                            ),
+                            style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -103,7 +100,7 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // SEARCH FIELD
@@ -133,10 +130,12 @@ fun HistoryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("search_input"),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 )
             )
 
@@ -145,7 +144,7 @@ fun HistoryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -160,7 +159,7 @@ fun HistoryScreen(
                             .clickable { selectedFilterTab = tab }
                             .testTag("filter_tab_$tab"),
                         colors = CardDefaults.cardColors(containerColor = tabBgColorColors),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(50)
                     ) {
                         Box(
                             modifier = Modifier
@@ -172,7 +171,7 @@ fun HistoryScreen(
                                 text = tab,
                                 style = MaterialTheme.typography.labelLarge,
                                 color = tabTextColorColors,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -201,7 +200,7 @@ fun HistoryScreen(
                             text = "Nenhuma transação encontrada",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = "Tente alterar os termos de busca ou filtros.",
@@ -244,11 +243,11 @@ fun HistoryTransactionItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
         Row(
             modifier = Modifier
@@ -279,21 +278,15 @@ fun HistoryTransactionItem(
                 // Clean Minimalist categorical colors matching Design spec
                 val isReceita = tx.type == "RECEITA"
                 val (iconBg, iconColor) = if (isReceita) {
-                    Color(0xFFDCFCE7) to Color(0xFF15803D) // green-100 to green-700
+                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.secondary
                 } else {
-                    when (tx.category.lowercase()) {
-                        "compras" -> Color(0xFFFFEDD5) to Color(0xFFC2410C) // orange-100 to orange-700
-                        "alimentação" -> Color(0xFFFEE2E2) to Color(0xFFB91C1C) // red-100 to red-700
-                        "transporte" -> Color(0xFFFEF9C3) to Color(0xFFA16207) // yellow-100 to yellow-800
-                        "utilidades" -> Color(0xFFDBEAFE) to Color(0xFF1D4ED8) // blue-100 to blue-700
-                        else -> Color(0xFFF3F4F9) to Color(0xFF535F70) // gray-100 to gray-700
-                    }
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) to MaterialTheme.colorScheme.primary
                 }
 
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(iconBg),
                     contentAlignment = Alignment.Center
                 ) {
@@ -310,9 +303,9 @@ fun HistoryTransactionItem(
                 ) {
                     Text(
                         text = tx.title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -330,13 +323,13 @@ fun HistoryTransactionItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val prefix = if (tx.type == "RECEITA") "+ " else "- "
-                val color = if (tx.type == "RECEITA") Color(0xFF15803D) else MaterialTheme.colorScheme.onSurface
+                val color = if (tx.type == "RECEITA") MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
 
                 Text(
                     text = prefix + numberFormat.format(tx.amount) + " MT",
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = color,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 IconButton(

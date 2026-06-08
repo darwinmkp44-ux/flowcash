@@ -92,7 +92,7 @@ fun OnboardingScreen(
                         "FC",
                         style = MaterialTheme.typography.displayLarge.copy(fontSize = 48.sp),
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -100,10 +100,7 @@ fun OnboardingScreen(
 
                 Text(
                     "FlowCash",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    ),
+                    style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
 
@@ -127,24 +124,24 @@ fun OnboardingScreen(
 
                 Spacer(Modifier.height(48.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Savings, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.height(4.dp))
                         Text("Metas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.TrendingUp, null, tint = Color(0xFF22C55E), modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.TrendingUp, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.height(4.dp))
                         Text("Receitas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.TrendingDown, null, tint = Color(0xFFEF4444), modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.TrendingDown, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.height(4.dp))
                         Text("Despesas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.CardGiftcard, null, tint = Color(0xFFFF9800), modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.CardGiftcard, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.height(4.dp))
                         Text("Categorias", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -157,10 +154,7 @@ fun OnboardingScreen(
 
                 Text(
                     "Criar Conta",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    ),
+                    style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
@@ -213,10 +207,7 @@ fun OnboardingScreen(
 
                 Text(
                     "Foto de Perfil",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    ),
+                    style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
@@ -340,7 +331,7 @@ fun OnboardingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -353,7 +344,7 @@ fun OnboardingScreen(
                         else -> "Concluir"
                     },
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.width(8.dp))
                 Icon(Icons.Outlined.ArrowForward, null, modifier = Modifier.size(20.dp))

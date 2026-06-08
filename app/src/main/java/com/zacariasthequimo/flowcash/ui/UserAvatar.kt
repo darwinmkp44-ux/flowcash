@@ -40,7 +40,7 @@ fun UserAvatar(
             .size(size)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
         contentAlignment = Alignment.Center
     ) {
         if (bitmap != null) {
@@ -59,7 +59,7 @@ fun UserAvatar(
             Text(
                 text = initials.ifEmpty { "FC" },
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = (size.value / 2.2).sp
                 ),
                 color = MaterialTheme.colorScheme.primary

@@ -62,10 +62,7 @@ fun GoalsScreen(
                         )
                         Text(
                             "Metas",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = (-0.5).sp
-                            ),
+                            style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -90,8 +87,8 @@ fun GoalsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             // HEADER DESCRIPTION
@@ -101,7 +98,7 @@ fun GoalsScreen(
                         text = "Minhas Metas",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -149,7 +146,7 @@ fun GoalsScreen(
                             Text(
                                 "Criar nova meta",
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -160,8 +157,8 @@ fun GoalsScreen(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                         ),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.1f))
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
@@ -232,9 +229,9 @@ fun GoalItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = !isComplete) { onAddSavingsClick() },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = if (isComplete) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surfaceContainerLowest),
-        border = BorderStroke(1.dp, if (isComplete) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -255,10 +252,10 @@ fun GoalItemCard(
                         else -> Icons.Default.TrackChanges
                     }
                     val (iconBg, iconColor) = when (goal.category) {
-                        "Segurança Financeira" -> Color(0xFFDCFCE7) to Color(0xFF15803D) // green-100 to green-700
-                        "Trabalho & Carreira" -> Color(0xFFDBEAFE) to Color(0xFF1D4ED8) // blue-100 to blue-700
-                        "Lazer & Sonhos" -> Color(0xFFFFEDD5) to Color(0xFFC2410C) // orange-100 to orange-700
-                        else -> Color(0xFFF3F4F9) to Color(0xFF535F70) // gray-100 to gray-700
+                        "Segurança Financeira" -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.secondary
+                        "Trabalho & Carreira" -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) to MaterialTheme.colorScheme.primary
+                        "Lazer & Sonhos" -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) to MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) to MaterialTheme.colorScheme.onSurfaceVariant
                     }
 
                     Box(
@@ -281,7 +278,7 @@ fun GoalItemCard(
                             text = goal.title,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -301,7 +298,7 @@ fun GoalItemCard(
                         Box(
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .background(Color(0xFF15803D))
+                                .background(MaterialTheme.colorScheme.secondary)
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -309,7 +306,7 @@ fun GoalItemCard(
                                 text = "CONCLUÍDA",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     } else {
@@ -324,7 +321,7 @@ fun GoalItemCard(
                                 text = String.format(Locale.getDefault(), "%.0f%%", percentage),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -363,7 +360,7 @@ fun GoalItemCard(
                         text = numberFormat.format(goal.currentAmount) + " MT",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -451,7 +448,7 @@ fun CreateGoalModal(
                 "Nova Meta",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         },
         text = {
@@ -500,7 +497,7 @@ fun CreateGoalModal(
                 )
             }
         },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
     )
 }
@@ -548,7 +545,7 @@ fun AddSavingsModal(
                 if (isComplete) "Meta concluída!" else "Adicionar economia",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         },
         text = {
@@ -577,7 +574,7 @@ fun AddSavingsModal(
                 }
             }
         },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
     )
 }
