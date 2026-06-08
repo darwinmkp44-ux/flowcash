@@ -13,10 +13,8 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -26,7 +24,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +35,7 @@ import com.zacariasthequimo.flowcash.data.entity.Goal
 import com.zacariasthequimo.flowcash.ui.BusinessViewModel
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
 import com.zacariasthequimo.flowcash.ui.ThemeMode
+import com.zacariasthequimo.flowcash.ui.UserAvatar
 import com.zacariasthequimo.flowcash.ui.screens.*
 import com.zacariasthequimo.flowcash.ui.theme.MyApplicationTheme
 
@@ -88,6 +86,7 @@ class BusinessMainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
             }
             var onboardingDone by remember { mutableStateOf(financeViewModel.isOnboardingComplete) }
+            var notificationPermissionDone by remember { mutableStateOf(false) }
 
             MyApplicationTheme(darkTheme = isDarkMode) {
                 Surface(
@@ -98,6 +97,10 @@ class BusinessMainActivity : ComponentActivity() {
                         OnboardingScreen(
                             viewModel = financeViewModel,
                             onComplete = { onboardingDone = true }
+                        )
+                    } else if (!notificationPermissionDone) {
+                        NotificationPermissionScreen(
+                            onComplete = { notificationPermissionDone = true }
                         )
                     } else {
                         BusinessOrchestrator(
@@ -121,21 +124,6 @@ fun BusinessOrchestrator(
     themeMode: ThemeMode,
     onSetThemeMode: (ThemeMode) -> Unit
 ) {
-    val context = LocalContext.current
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { }
-
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-
     var activeTab by remember { mutableStateOf(BizTab.PESSOAL) }
     var isAddingTransaction by remember { mutableStateOf(false) }
     var activeBlock by remember { mutableStateOf<BusinessBlock?>(null) }
@@ -171,32 +159,32 @@ fun BusinessOrchestrator(
                         val isSelected = activeTab == tab
 
                         if (tab == BizTab.ADD) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 4.dp)
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .clickable { isAddingTransaction = true },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                FloatingActionButton(
-                                    onClick = { isAddingTransaction = true },
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(48.dp),
-                                    shape = CircleShape,
-                                    elevation = FloatingActionButtonDefaults.elevation(
-                                        defaultElevation = 4.dp
-                                    )
-                                ) {
-                                    Icon(
-                                        Icons.Filled.Add,
-                                        contentDescription = "Nova Transa\u00e7\u00e3o",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
+                            NavigationBarItem(
+                                selected = isSelected,
+                                onClick = { isAddingTransaction = true },
+                                icon = {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .then(
+                                                if (isSelected) Modifier else Modifier
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Add,
+                                            contentDescription = "Nova Transa\u00e7\u00e3o",
+                                            modifier = Modifier.size(24.dp),
+                                            tint = if (isSelected) MaterialTheme.colorScheme.primary
+                                                   else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                },
+                                label = { Text("") },
+                                colors = NavigationBarItemDefaults.colors(
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
+                                )
+                            )
                         } else {
                             NavigationBarItem(
                                 selected = isSelected,
@@ -317,7 +305,7 @@ fun BusinessBlockContent(
         BusinessBlock.DIVIDAS -> DebtScreen(viewModel = viewModel)
         BusinessBlock.PRODUTOS -> ProductScreen(viewModel = viewModel)
         BusinessBlock.AGENDA -> AgendaScreen()
-        BusinessBlock.MODULOS -> ModulesScreen()
+        BusinessBlock.MODULOS -> ModulesScreen(viewModel = viewModel)
         BusinessBlock.RELATORIOS -> ProfitLossScreen(viewModel = viewModel)
     }
 }
@@ -328,8 +316,35 @@ fun ProFinances(
     onNavigateToNewTransaction: () -> Unit
 ) {
     var activeProTab by remember { mutableStateOf(0) }
+    val userName by viewModel.userName.collectAsState()
+    val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            UserAvatar(
+                photoPath = profilePhotoPath,
+                userName = userName
+            )
+            Column {
+                Text(
+                    text = "Bom dia,",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = userName,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -351,11 +366,21 @@ fun ProFinances(
                 0 -> HomeScreen(
                     viewModel = viewModel,
                     onNavigateToNewTransaction = onNavigateToNewTransaction,
-                    onNavigateToHistory = { activeProTab = 1 }
+                    onNavigateToHistory = { activeProTab = 1 },
+                    showTopBar = false
                 )
-                1 -> HistoryScreen(viewModel = viewModel)
-                2 -> GoalsScreen(viewModel = viewModel)
-                3 -> AnalyticsScreen(viewModel = viewModel)
+                1 -> HistoryScreen(
+                    viewModel = viewModel,
+                    showTopBar = false
+                )
+                2 -> GoalsScreen(
+                    viewModel = viewModel,
+                    showTopBar = false
+                )
+                3 -> AnalyticsScreen(
+                    viewModel = viewModel,
+                    showTopBar = false
+                )
             }
         }
     }

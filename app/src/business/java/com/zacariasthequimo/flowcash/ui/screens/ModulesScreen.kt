@@ -12,29 +12,46 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.zacariasthequimo.flowcash.ui.BusinessViewModel
 
 data class BusinessModule(
     val id: String,
     val title: String,
     val icon: ImageVector,
-    val description: String,
-    var enabled: Boolean = true
+    val description: String
 )
 
 @Composable
-fun ModulesScreen() {
-    val modules = remember {
-        mutableStateListOf(
-            BusinessModule("clientes", "Clientes", Icons.Outlined.People, "Gest\u00e3o de clientes e contactos"),
-            BusinessModule("vendas", "Vendas", Icons.Outlined.ShoppingCart, "Registo e acompanhamento de vendas"),
-            BusinessModule("dividas", "D\u00edvidas", Icons.Outlined.MonetizationOn, "Controlo de d\u00edvidas a receber"),
-            BusinessModule("produtos", "Produtos", Icons.Outlined.Inventory2, "Stock e gest\u00e3o de produtos"),
-            BusinessModule("agenda", "Agenda", Icons.Outlined.CalendarMonth, "Compromissos e lembretes"),
-            BusinessModule("equipa", "Equipa", Icons.Outlined.Groups, "Gest\u00e3o de membros da equipa"),
-            BusinessModule("relatorios", "Relat\u00f3rios", Icons.Outlined.BarChart, "Relat\u00f3rios de lucros e desempenho")
+fun ModulesScreen(viewModel: BusinessViewModel) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("flowcash_modules", android.content.Context.MODE_PRIVATE)
+
+    val allModules = remember {
+        listOf(
+            BusinessModule("CLIENTES", "Clientes", Icons.Outlined.People, "Gest\u00e3o de clientes e contactos"),
+            BusinessModule("VENDAS", "Vendas", Icons.Outlined.ShoppingCart, "Registo e acompanhamento de vendas"),
+            BusinessModule("DIVIDAS", "D\u00edvidas", Icons.Outlined.MonetizationOn, "Controlo de d\u00edvidas a receber"),
+            BusinessModule("PRODUTOS", "Produtos", Icons.Outlined.Inventory2, "Stock e gest\u00e3o de produtos"),
+            BusinessModule("AGENDA", "Agenda", Icons.Outlined.CalendarMonth, "Compromissos e lembretes"),
+            BusinessModule("EQUIPA", "Equipa", Icons.Outlined.Groups, "Gest\u00e3o de membros da equipa"),
+            BusinessModule("RELATORIOS", "Relat\u00f3rios", Icons.Outlined.BarChart, "Relat\u00f3rios de lucros e desempenho")
         )
+    }
+
+    var disabledSet by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    LaunchedEffect(Unit) {
+        val saved = prefs.getString("disabled_modules", "") ?: ""
+        disabledSet = if (saved.isBlank()) emptySet() else saved.split(",").toSet()
+    }
+
+    fun toggleModule(id: String, enabled: Boolean) {
+        val newSet = if (enabled) disabledSet - id else disabledSet + id
+        disabledSet = newSet
+        prefs.edit().putString("disabled_modules", newSet.joinToString(",")).apply()
     }
 
     Column(
@@ -53,23 +70,24 @@ fun ModulesScreen() {
         )
 
         Text(
-            text = "Ative ou desative os m\u00f3dulos conforme a sua necessidade.",
+            text = "Ative ou desative os m\u00f3dulos conforme a sua necessidade. Os m\u00f3dulos desativados n\u00e3o aparecem na tela Business.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        modules.forEachIndexed { index, module ->
+        allModules.forEach { module ->
+            val enabled = module.id !in disabledSet
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (module.enabled)
+                    containerColor = if (enabled)
                         MaterialTheme.colorScheme.surfaceContainerLowest
                     else
                         MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f)
                 ),
                 elevation = CardDefaults.cardElevation(
-                    defaultElevation = if (module.enabled) 0.5f.dp else 0.dp
+                    defaultElevation = if (enabled) 0.5f.dp else 0.dp
                 )
             ) {
                 Row(
@@ -82,7 +100,7 @@ fun ModulesScreen() {
                     Icon(
                         imageVector = module.icon,
                         contentDescription = null,
-                        tint = if (module.enabled)
+                        tint = if (enabled)
                             MaterialTheme.colorScheme.primary
                         else
                             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
@@ -94,7 +112,7 @@ fun ModulesScreen() {
                             text = module.title,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (module.enabled)
+                            color = if (enabled)
                                 MaterialTheme.colorScheme.onSurface
                             else
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -107,10 +125,8 @@ fun ModulesScreen() {
                     }
 
                     Switch(
-                        checked = module.enabled,
-                        onCheckedChange = {
-                            modules[index] = module.copy(enabled = it)
-                        },
+                        checked = enabled,
+                        onCheckedChange = { toggleModule(module.id, it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary

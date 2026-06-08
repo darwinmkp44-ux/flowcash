@@ -1,7 +1,10 @@
 package com.zacariasthequimo.flowcash.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -16,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.TrendingUp
@@ -26,7 +30,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +51,14 @@ fun OnboardingScreen(
     var lastName by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
+
+    val iosInputColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        cursorColor = MaterialTheme.colorScheme.primary
+    )
 
     val pickPhotoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -77,7 +89,6 @@ fun OnboardingScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Page 1: Welcome
             if (currentPage == 0) {
                 Spacer(Modifier.weight(0.15f))
 
@@ -107,7 +118,7 @@ fun OnboardingScreen(
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    "Controle suas finanças de forma simples e organizada.",
+                    "Controle suas finan\u00e7as de forma simples e organizada.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -116,7 +127,7 @@ fun OnboardingScreen(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "Acompanhe receitas, despesas e metas de poupança — tudo offline e sem complicação.",
+                    "Acompanhe receitas, despesas e metas de poupan\u00e7a \u2014 tudo offline e sem complica\u00e7\u00e3o.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
@@ -148,7 +159,6 @@ fun OnboardingScreen(
                 }
             }
 
-            // Page 2: Create Account
             if (currentPage == 1) {
                 Spacer(Modifier.weight(0.1f))
 
@@ -161,7 +171,7 @@ fun OnboardingScreen(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "Os seus dados ficam salvos apenas neste dispositivo. Nada é enviado para a internet.",
+                    "Os seus dados ficam salvos apenas neste dispositivo. Nada \u00e9 enviado para a internet.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
@@ -176,7 +186,8 @@ fun OnboardingScreen(
                     placeholder = { Text("Ex: Zacarias") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = iosInputColors
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -188,20 +199,20 @@ fun OnboardingScreen(
                     placeholder = { Text("Ex: Thequimo") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = iosInputColors
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "Estes dados serão usados apenas localmente para personalizar a sua experiência.",
+                    "Estes dados ser\u00e3o usados apenas localmente para personalizar a sua experi\u00eancia.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     textAlign = TextAlign.Center
                 )
             }
 
-            // Page 3: Profile Photo
             if (currentPage == 2) {
                 Spacer(Modifier.weight(0.15f))
 
@@ -289,14 +300,58 @@ fun OnboardingScreen(
                 )
             }
 
+            if (currentPage == 3) {
+                Spacer(Modifier.weight(0.2f))
+
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Notifications,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(32.dp))
+
+                Text(
+                    "Notifica\u00e7\u00f5es",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    "Permita que o app envie notifica\u00e7\u00f5es para lembrar de registar transa\u00e7\u00f5es, acompanhar metas e receber resumos financeiros.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    "Os dados nunca saem do seu dispositivo.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Spacer(Modifier.weight(0.2f))
 
-            // Page Indicator
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                for (i in 0..2) {
+                for (i in 0..3) {
                     Box(
                         modifier = Modifier
                             .size(if (currentPage == i) 24.dp else 8.dp, 8.dp)
@@ -309,7 +364,6 @@ fun OnboardingScreen(
                 }
             }
 
-            // Navigation Button
             Button(
                 onClick = {
                     when (currentPage) {
@@ -323,6 +377,9 @@ fun OnboardingScreen(
                             currentPage = 2
                         }
                         2 -> {
+                            currentPage = 3
+                        }
+                        3 -> {
                             viewModel.setOnboardingComplete()
                             onComplete()
                         }
@@ -339,7 +396,7 @@ fun OnboardingScreen(
             ) {
                 Text(
                     when (currentPage) {
-                        0 -> "Começar"
+                        0 -> "Come\u00e7ar"
                         1 -> "Continuar"
                         else -> "Concluir"
                     },
@@ -351,6 +408,49 @@ fun OnboardingScreen(
             }
 
             Spacer(Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun NotificationPermissionScreen(onComplete: () -> Unit) {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { onComplete() }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                onComplete()
+            } else {
+                launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            onComplete()
+        }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "Notifica\u00e7\u00f5es",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "Permita que o app envie notifica\u00e7\u00f5es para lembr\u00e1-lo de registar transa\u00e7\u00f5es e acompanhar os seus resumos financeiros.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(32.dp))
+            CircularProgressIndicator()
         }
     }
 }

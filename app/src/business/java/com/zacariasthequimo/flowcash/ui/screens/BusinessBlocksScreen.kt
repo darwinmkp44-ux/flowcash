@@ -15,8 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zacariasthequimo.flowcash.BusinessBlock
@@ -35,8 +35,22 @@ fun BusinessBlocksScreen(
     val pendingDebtAmount by viewModel.pendingDebtAmount.collectAsState()
     val totalCustomers by viewModel.totalCustomers.collectAsState()
     val sales by viewModel.sales.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) { viewModel.refreshDashboard() }
+
+    val prefs = context.getSharedPreferences("flowcash_modules", android.content.Context.MODE_PRIVATE)
+    val disabledModules = remember { mutableStateListOf<String>() }
+
+    LaunchedEffect(Unit) {
+        val disabled = prefs.getString("disabled_modules", "") ?: ""
+        disabledModules.clear()
+        if (disabled.isNotBlank()) {
+            disabledModules.addAll(disabled.split(","))
+        }
+    }
+
+    val activeBlocks = BusinessBlock.entries.filter { it.name !in disabledModules }
 
     val nf = NumberFormat.getNumberInstance(Locale("pt", "MZ")).apply {
         minimumFractionDigits = 2
@@ -58,26 +72,73 @@ fun BusinessBlocksScreen(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        // Blocks grid
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            BusinessBlock.entries.forEach { block ->
-                BlockCard(
-                    block = block,
-                    metric = when (block) {
-                        BusinessBlock.CLIENTES -> "$totalCustomers clientes"
-                        BusinessBlock.VENDAS -> "${sales.size} vendas"
-                        BusinessBlock.DIVIDAS -> "${nf.format(pendingDebtAmount)} MT pendentes"
-                        BusinessBlock.PRODUTOS -> "Gerir stock"
-                        BusinessBlock.AGENDA -> "Compromissos"
-                        BusinessBlock.MODULOS -> "Ativar/desativar"
-                        BusinessBlock.RELATORIOS -> "Lucros e desempenho"
-                    },
-                    onClick = { onBlockClick(block) }
-                )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("Receita Hoje", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(4.dp))
+                    Text("${nf.format(todayRevenue)} MT", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text("Este M\u00eas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(4.dp))
+                    Text("${nf.format(monthRevenue)} MT", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
 
-        // Financial flow chart
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val chunks = activeBlocks.chunked(2)
+            chunks.forEach { rowBlocks ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowBlocks.forEach { block ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            BlockCard(
+                                block = block,
+                                metric = when (block) {
+                                    BusinessBlock.CLIENTES -> "$totalCustomers clientes"
+                                    BusinessBlock.VENDAS -> "${sales.size} vendas"
+                                    BusinessBlock.DIVIDAS -> "${nf.format(pendingDebtAmount)} MT pendentes"
+                                    BusinessBlock.PRODUTOS -> "Gerir stock"
+                                    BusinessBlock.AGENDA -> "Compromissos"
+                                    BusinessBlock.MODULOS -> "Ativar/desativar"
+                                    BusinessBlock.RELATORIOS -> "Lucros e desempenho"
+                                },
+                                onClick = { onBlockClick(block) }
+                            )
+                        }
+                    }
+                    if (rowBlocks.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -144,7 +205,6 @@ fun BusinessBlocksScreen(
                         )
                     }
 
-                    // Grid line
                     drawLine(
                         color = gridColor,
                         start = Offset(0f, h * 0.9f),
@@ -197,14 +257,14 @@ private fun BlockCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .padding(8.dp)
+                    .size(36.dp)
+                    .padding(6.dp)
             ) {
                 Icon(
                     imageVector = block.icon,
@@ -217,23 +277,16 @@ private fun BlockCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = block.title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = metric,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(20.dp)
-            )
         }
     }
 }

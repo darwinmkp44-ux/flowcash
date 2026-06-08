@@ -37,7 +37,8 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
-    viewModel: FinanceViewModel
+    viewModel: FinanceViewModel,
+    showTopBar: Boolean = true
 ) {
     val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
     val totalIncome by viewModel.totalIncome.collectAsState()
@@ -45,7 +46,8 @@ fun AnalyticsScreen(
     val transactions by viewModel.transactions.collectAsState()
     val goals by viewModel.goals.collectAsState()
     val poupancaSum by viewModel.poupancaSum.collectAsState()
-    var selectedPeriod by remember { mutableStateOf("Mensal") } // "Mensal", "Anual"
+    val userName by viewModel.userName.collectAsState()
+    var selectedPeriod by remember { mutableStateOf("Mensal") }
 
     val netBalance = totalIncome - totalExpenses - poupancaSum
 
@@ -77,50 +79,14 @@ fun AnalyticsScreen(
         maximumFractionDigits = 2
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        UserAvatar(
-                            photoPath = profilePhotoPath,
-                            userName = viewModel.userName.collectAsState().value
-                        )
-                        Text(
-                            "Estatísticas",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = "Notificações",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    val content = @Composable {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(bottom = 100.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)
         ) {
-            // PERIOD SELECTOR (Monthly / Yearly)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -134,7 +100,7 @@ fun AnalyticsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = "Estatísticas",
+                            text = "Estat\u00edsticas",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.SemiBold
@@ -150,13 +116,13 @@ fun AnalyticsScreen(
                     ) {
                         listOf("Mensal", "Anual").forEach { period ->
                             val isSelected = selectedPeriod == period
-                            val periodBgColorColors = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
-                            val periodTextColorColors = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            val periodBg = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
+                            val periodText = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
 
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(periodBgColorColors)
+                                    .background(periodBg)
                                     .clickable { selectedPeriod = period }
                                     .padding(horizontal = 14.dp, vertical = 6.dp)
                                     .testTag("period_tab_$period"),
@@ -165,7 +131,7 @@ fun AnalyticsScreen(
                                 Text(
                                     text = period,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = periodTextColorColors,
+                                    color = periodText,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
@@ -174,12 +140,10 @@ fun AnalyticsScreen(
                 }
             }
 
-            // SUMMARY CARDS (Income / Expenses / Balance)
             item {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Total Income Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -233,7 +197,6 @@ fun AnalyticsScreen(
                         }
                     }
 
-                    // Total Expenses Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -287,7 +250,6 @@ fun AnalyticsScreen(
                         }
                     }
 
-                    // Net Balance Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -320,7 +282,7 @@ fun AnalyticsScreen(
                                 }
                                 Column {
                                     Text(
-                                        "SALDO LÍQUIDO",
+                                        "SALDO L\u00cdQUIDO",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                     )
@@ -337,7 +299,6 @@ fun AnalyticsScreen(
                 }
             }
 
-            // INCOME VS EXPENSES BAR CHART
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -351,13 +312,12 @@ fun AnalyticsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Entradas vs Saídas",
+                                text = "Entradas vs Sa\u00eddas",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.SemiBold
                             )
 
-                            // Chart Legend Indicators
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -371,15 +331,13 @@ fun AnalyticsScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondaryContainer))
-                                    Text("Saídas", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Sa\u00eddas", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Styled double comparison columns layout
-                        // Dynamic months calculation based on transaction timestamps
                         val calendar = java.util.Calendar.getInstance()
                         val months = ArrayList<String>()
                         val monthlyIncomes = DoubleArray(6)
@@ -444,7 +402,6 @@ fun AnalyticsScreen(
                                             .weight(1f)
                                             .fillMaxHeight()
                                     ) {
-                                        // Income Bar
                                         Box(
                                             modifier = Modifier
                                                 .width(10.dp)
@@ -453,7 +410,6 @@ fun AnalyticsScreen(
                                                 .background(MaterialTheme.colorScheme.primaryContainer)
                                         )
 
-                                        // Expense Bar
                                         Box(
                                             modifier = Modifier
                                                 .width(10.dp)
@@ -475,7 +431,6 @@ fun AnalyticsScreen(
                 }
             }
 
-            // SPENDING MIX PIE CHART
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -496,27 +451,26 @@ fun AnalyticsScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Dynamic pie chart calculation based on category expenses
                         val expensesList = transactions.filter { it.type == "DESPESA" }
                         val totalExpenseAmount = expensesList.sumOf { it.amount }
 
                         val categoryAmounts = mapOf(
                             "Compras" to expensesList.filter { it.category.equals("Compras", ignoreCase = true) }.sumOf { it.amount },
-                            "Alimentação" to expensesList.filter { it.category.equals("Alimentação", ignoreCase = true) }.sumOf { it.amount },
+                            "Alimenta\u00e7\u00e3o" to expensesList.filter { it.category.equals("Alimenta\u00e7\u00e3o", ignoreCase = true) }.sumOf { it.amount },
                             "Transporte" to expensesList.filter { it.category.equals("Transporte", ignoreCase = true) }.sumOf { it.amount },
                             "Outros" to expensesList.filter { !it.category.equals("Compras", ignoreCase = true) &&
-                                                              !it.category.equals("Alimentação", ignoreCase = true) &&
-                                                              !it.category.equals("Transporte", ignoreCase = true) }.sumOf { it.amount }
+                                                                !it.category.equals("Alimenta\u00e7\u00e3o", ignoreCase = true) &&
+                                                                !it.category.equals("Transporte", ignoreCase = true) }.sumOf { it.amount }
                         )
 
                         val comprasPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Compras"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
-                        val alimentacaoPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Alimentação"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
+                        val alimentacaoPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Alimenta\u00e7\u00e3o"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
                         val transportePercent = if (totalExpenseAmount > 0) ((categoryAmounts["Transporte"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
                         val outrosPercent = if (totalExpenseAmount > 0) ((categoryAmounts["Outros"] ?: 0.0) / totalExpenseAmount).toFloat() else 0.0f
 
                         val categoriesMix = listOf(
                             Pair("Compras", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", comprasPercent * 100) else "0%"),
-                            Pair("Alimentação", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", alimentacaoPercent * 100) else "0%"),
+                            Pair("Alimenta\u00e7\u00e3o", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", alimentacaoPercent * 100) else "0%"),
                             Pair("Transporte", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", transportePercent * 100) else "0%"),
                             Pair("Outros", if (totalExpenseAmount > 0) String.format(java.util.Locale.US, "%.0f%%", outrosPercent * 100) else "0%")
                         )
@@ -527,15 +481,14 @@ fun AnalyticsScreen(
                             MaterialTheme.colorScheme.secondary
                         )
 
-                        // Custom Styled Circular Ring Pie Canvas Chart
                         Box(
                             modifier = Modifier.size(170.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            val color1 = MaterialTheme.colorScheme.primary // Compras - Laranja
-                            val color2 = MaterialTheme.colorScheme.error // Alimentação - Vermelho
-                            val color3 = MaterialTheme.colorScheme.tertiary // Transporte - Âmbar
-                            val color4 = MaterialTheme.colorScheme.secondary // Outros - Verde Azulado
+                            val color1 = MaterialTheme.colorScheme.primary
+                            val color2 = MaterialTheme.colorScheme.error
+                            val color3 = MaterialTheme.colorScheme.tertiary
+                            val color4 = MaterialTheme.colorScheme.secondary
 
                             val strokeWidthVal = 14.dp
 
@@ -653,7 +606,6 @@ fun AnalyticsScreen(
                 }
             }
 
-            // INSIGHTS SECTION (Recomendações inteligentes)
             item {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -665,14 +617,13 @@ fun AnalyticsScreen(
                         fontWeight = FontWeight.SemiBold
                     )
 
-                    // Insight real 1: comparacao de despesas
                     val expInsight = remember(transactions, expenseChange) {
                         if (expenseChange < 0) {
                             "Despesas reduzidas em ${"%.0f".format(kotlin.math.abs(expenseChange))}%"
                         } else if (expenseChange > 0) {
                             "Despesas aumentaram ${"%.0f".format(expenseChange)}%"
                         } else {
-                            "Despesas estáveis este mês"
+                            "Despesas est\u00e1veis este m\u00eas"
                         }
                     }
                     Card(
@@ -709,7 +660,7 @@ fun AnalyticsScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = if (expenseChange < 0) "Continue assim! Está a gerir bem o seu orçamento." else if (expenseChange > 0) "Reveja os seus gastos para equilibrar as contas." else "Mantenha o foco nos seus objetivos financeiros.",
+                                    text = if (expenseChange < 0) "Continue assim! Est\u00e1 a gerir bem o seu or\u00e7amento." else if (expenseChange > 0) "Reveja os seus gastos para equilibrar as contas." else "Mantenha o foco nos seus objetivos financeiros.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -717,7 +668,6 @@ fun AnalyticsScreen(
                         }
                     }
 
-                    // Insight real 2: meta com maior progresso
                     val topGoal = remember(goals) {
                         goals.maxByOrNull { g -> if (g.targetAmount > 0) g.currentAmount / g.targetAmount else 0.0 }
                     }
@@ -757,7 +707,7 @@ fun AnalyticsScreen(
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = if (goalPct >= 100) "Parabéns! Meta atingida!" else "Continue contribuindo para atingir este objetivo.",
+                                        text = if (goalPct >= 100) "Parab\u00e9ns! Meta atingida!" else "Continue contribuindo para atingir este objetivo.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -768,5 +718,49 @@ fun AnalyticsScreen(
                 }
             }
         }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            UserAvatar(
+                                photoPath = profilePhotoPath,
+                                userName = userName
+                            )
+                            Text(
+                                "Estat\u00edsticas",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifica\u00e7\u00f5es",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                content()
+            }
+        }
+    } else {
+        content()
     }
 }

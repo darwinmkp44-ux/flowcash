@@ -17,8 +17,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -37,13 +37,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
-                    .launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-
         val viewModel = ViewModelProvider(this)[FinanceViewModel::class.java]
 
         setContent {
@@ -55,6 +48,7 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
             }
             var onboardingDone by remember { mutableStateOf(viewModel.isOnboardingComplete) }
+            var notificationPermissionDone by remember { mutableStateOf(false) }
 
             MyApplicationTheme(darkTheme = isDarkMode) {
                 Surface(
@@ -65,6 +59,10 @@ class MainActivity : ComponentActivity() {
                         OnboardingScreen(
                             viewModel = viewModel,
                             onComplete = { onboardingDone = true }
+                        )
+                    } else if (!notificationPermissionDone) {
+                        NotificationPermissionScreen(
+                            onComplete = { notificationPermissionDone = true }
                         )
                     } else {
                         AppOrchestrator(
@@ -87,8 +85,8 @@ enum class BottomNavTab(
     val inactiveIcon: ImageVector
 ) {
     HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
-    HISTORY("history", "Histórico", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
-    ANALYTICS("analytics", "Estatísticas", Icons.Filled.Leaderboard, Icons.Outlined.Leaderboard),
+    HISTORY("history", "Hist\u00f3rico", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
+    ANALYTICS("analytics", "Estat\u00edsticas", Icons.Filled.Leaderboard, Icons.Outlined.Leaderboard),
     GOALS("goals", "Metas", Icons.Filled.TrackChanges, Icons.Outlined.TrackChanges),
     PROFILE("profile", "Perfil", Icons.Filled.Person, Icons.Outlined.Person)
 }
@@ -100,21 +98,6 @@ fun AppOrchestrator(
     themeMode: ThemeMode,
     onSetThemeMode: (ThemeMode) -> Unit
 ) {
-    val context = LocalContext.current
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { /* user granted or denied */ }
-
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                != android.content.pm.PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
-
     var activeTab by remember { mutableStateOf(BottomNavTab.HOME) }
     var isAddingTransaction by remember { mutableStateOf(false) }
     var showAccountDetail by remember { mutableStateOf(false) }
@@ -172,7 +155,6 @@ fun AppOrchestrator(
                 .fillMaxSize()
                 .padding(bottom = if (isAddingTransaction) 0.dp else innerPadding.calculateBottomPadding())
         ) {
-            // Screen state controller
             when {
                 isAddingTransaction -> {
                     NewTransactionScreen(
@@ -238,10 +220,4 @@ fun AppOrchestrator(
             }
         }
     }
-}
-
-// Simple extension helper for MaterialTheme color customization inside compose blocks
-@Composable
-fun ColorScheme.withAlpha(alpha: Float): Color {
-    return this.onSurface.copy(alpha = alpha)
 }

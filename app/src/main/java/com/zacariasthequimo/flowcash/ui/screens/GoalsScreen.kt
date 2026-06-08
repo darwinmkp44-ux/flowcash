@@ -40,7 +40,8 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsScreen(
-    viewModel: FinanceViewModel
+    viewModel: FinanceViewModel,
+    showTopBar: Boolean = true
 ) {
     val goals by viewModel.goals.collectAsState()
     val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
@@ -48,50 +49,22 @@ fun GoalsScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var showAddSavingsDialog by remember { mutableStateOf<Goal?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        UserAvatar(
-                            photoPath = profilePhotoPath,
-                            userName = userName
-                        )
-                        Text(
-                            "Metas",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = "Notificações",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    val iosInputColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        cursorColor = MaterialTheme.colorScheme.primary
+    )
+
+    val content = @Composable {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 80.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 80.dp)
         ) {
-            // HEADER DESCRIPTION
             item {
                 Column {
                     Text(
@@ -109,7 +82,6 @@ fun GoalsScreen(
                 }
             }
 
-            // GOAL CARDS LISTING
             items(goals, key = { it.id }) { goal ->
                 GoalItemCard(
                     goal = goal,
@@ -118,7 +90,6 @@ fun GoalsScreen(
                 )
             }
 
-            // ACTIONS BAR
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -151,7 +122,6 @@ fun GoalsScreen(
                         }
                     }
 
-                    // Bottom tip card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -172,7 +142,7 @@ fun GoalsScreen(
                                 modifier = Modifier.size(32.dp)
                             )
                             Text(
-                                text = "Dica do Flow: Manter metas específicas aumenta suas chances de sucesso em 42%.",
+                                text = "Dica do Flow: Manter metas espec\u00edficas aumenta suas chances de sucesso em 42%.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -181,29 +151,73 @@ fun GoalsScreen(
                 }
             }
         }
+    }
 
-        // CREATE GOAL DIALOG MODAL
-        if (showCreateDialog) {
-            CreateGoalModal(
-                onDismiss = { showCreateDialog = false },
-                onSave = { title, category, limit ->
-                    viewModel.addGoal(title, category, limit)
-                    showCreateDialog = false
-                }
-            )
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            UserAvatar(
+                                photoPath = profilePhotoPath,
+                                userName = userName
+                            )
+                            Text(
+                                "Metas",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifica\u00e7\u00f5es",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                content()
+            }
         }
+    } else {
+        content()
+    }
 
-        // ADD SAVINGS DIALOG MODAL
-        showAddSavingsDialog?.let { goal ->
-            AddSavingsModal(
-                goal = goal,
-                onDismiss = { showAddSavingsDialog = null },
-                onAddSavings = { amount ->
-                    viewModel.addGoalSavings(goal.id, amount)
-                    showAddSavingsDialog = null
-                }
-            )
-        }
+    if (showCreateDialog) {
+        CreateGoalModal(
+            onDismiss = { showCreateDialog = false },
+            onSave = { title, category, limit ->
+                viewModel.addGoal(title, category, limit)
+                showCreateDialog = false
+            },
+            iosInputColors = iosInputColors
+        )
+    }
+
+    showAddSavingsDialog?.let { goal ->
+        AddSavingsModal(
+            goal = goal,
+            onDismiss = { showAddSavingsDialog = null },
+            onAddSavings = { amount ->
+                viewModel.addGoalSavings(goal.id, amount)
+                showAddSavingsDialog = null
+            },
+            iosInputColors = iosInputColors
+        )
     }
 }
 
@@ -244,15 +258,14 @@ fun GoalItemCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    // Unique visual icon based on Category
                     val icon = when (goal.category) {
-                        "Segurança Financeira" -> Icons.Default.Shield
+                        "Seguran\u00e7a Financeira" -> Icons.Default.Shield
                         "Trabalho & Carreira" -> Icons.Default.LaptopMac
                         "Lazer & Sonhos" -> Icons.Default.FlightTakeoff
                         else -> Icons.Default.TrackChanges
                     }
                     val (iconBg, iconColor) = when (goal.category) {
-                        "Segurança Financeira" -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.secondary
+                        "Seguran\u00e7a Financeira" -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.secondary
                         "Trabalho & Carreira" -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) to MaterialTheme.colorScheme.primary
                         "Lazer & Sonhos" -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) to MaterialTheme.colorScheme.primary
                         else -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) to MaterialTheme.colorScheme.onSurfaceVariant
@@ -303,7 +316,7 @@ fun GoalItemCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "CONCLUÍDA",
+                                text = "CONCLU\u00cdDA",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White,
                                 fontWeight = FontWeight.SemiBold
@@ -344,7 +357,6 @@ fun GoalItemCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Limits Substats
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -381,7 +393,6 @@ fun GoalItemCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Thick Gradient Meter Track
             val fillPercentage = animateFloatAsState(targetValue = percentage / 100f, tween(1000), label = "meter")
             val brush = Brush.horizontalGradient(
                 colors = listOf(
@@ -409,18 +420,18 @@ fun GoalItemCard(
     }
 }
 
-// CUSTOM CREATE GOAL INGRESS FORM DIALOG
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGoalModal(
     onDismiss: () -> Unit,
-    onSave: (String, String, Double) -> Unit
+    onSave: (String, String, Double) -> Unit,
+    iosInputColors: TextFieldColors = OutlinedTextFieldDefaults.colors()
 ) {
     var title by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Segurança Financeira") }
+    var selectedCategory by remember { mutableStateOf("Seguran\u00e7a Financeira") }
     var targetStr by remember { mutableStateOf("") }
 
-    val categories = listOf("Segurança Financeira", "Trabalho & Carreira", "Lazer & Sonhos")
+    val categories = listOf("Seguran\u00e7a Financeira", "Trabalho & Carreira", "Lazer & Sonhos")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -456,16 +467,15 @@ fun CreateGoalModal(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Goal description
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Nome da Meta (Ex: Carro, Casa)") },
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("goal_title_input")
+                    modifier = Modifier.fillMaxWidth().testTag("goal_title_input"),
+                    colors = iosInputColors
                 )
 
-                // Group selector
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Categoria", style = MaterialTheme.typography.labelSmall)
                     categories.forEach { cat ->
@@ -486,14 +496,14 @@ fun CreateGoalModal(
                     }
                 }
 
-                // Numeric Amount Target
                 OutlinedTextField(
                     value = targetStr,
                     onValueChange = { targetStr = it },
                     label = { Text("Valor Objetivo (MZN)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().testTag("goal_target_input")
+                    modifier = Modifier.fillMaxWidth().testTag("goal_target_input"),
+                    colors = iosInputColors
                 )
             }
         },
@@ -502,13 +512,13 @@ fun CreateGoalModal(
     )
 }
 
-// SAVINGS INPUT DIALOG MODAL
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddSavingsModal(
     goal: Goal,
     onDismiss: () -> Unit,
-    onAddSavings: (Double) -> Unit
+    onAddSavings: (Double) -> Unit,
+    iosInputColors: TextFieldColors = OutlinedTextFieldDefaults.colors()
 ) {
     val isComplete = goal.currentAmount >= goal.targetAmount
     var amountStr by remember { mutableStateOf("") }
@@ -542,7 +552,7 @@ fun AddSavingsModal(
         },
         title = {
             Text(
-                if (isComplete) "Meta concluída!" else "Adicionar economia",
+                if (isComplete) "Meta conclu\u00edda!" else "Adicionar economia",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold
@@ -551,7 +561,7 @@ fun AddSavingsModal(
         text = {
             if (isComplete) {
                 Text(
-                    "Parabéns! A meta \"${goal.title}\" já foi completamente atingida (${"%.0f".format(if (goal.targetAmount > 0) goal.currentAmount / goal.targetAmount * 100 else 0.0)}%). Não é possível adicionar mais fundos.",
+                    "Parab\u00e9ns! A meta \"${goal.title}\" j\u00e1 foi completamente atingida (${"%.0f".format(if (goal.targetAmount > 0) goal.currentAmount / goal.targetAmount * 100 else 0.0)}%). N\u00e3o \u00e9 poss\u00edvel adicionar mais fundos.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
@@ -569,7 +579,8 @@ fun AddSavingsModal(
                         label = { Text("Valor (MZN)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth().testTag("savings_add_input")
+                        modifier = Modifier.fillMaxWidth().testTag("savings_add_input"),
+                        colors = iosInputColors
                     )
                 }
             }

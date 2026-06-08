@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.data.entity.Transaction
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
-import com.zacariasthequimo.flowcash.ui.UserAvatar
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -43,7 +42,8 @@ import java.util.Locale
 fun HomeScreen(
     viewModel: FinanceViewModel,
     onNavigateToNewTransaction: () -> Unit,
-    onNavigateToHistory: () -> Unit
+    onNavigateToHistory: () -> Unit,
+    showTopBar: Boolean = true
 ) {
     val userName by viewModel.userName.collectAsState()
     val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
@@ -60,78 +60,17 @@ fun HomeScreen(
         maximumFractionDigits = 2
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        UserAvatar(
-                            photoPath = profilePhotoPath,
-                            userName = userName
-                        )
-                        Column {
-                            Text(
-                                text = "Bom dia,",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = userName,
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = "Notificações",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToNewTransaction,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .padding(bottom = 16.dp, end = 8.dp)
-                    .testTag("add_transaction_fab")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Nova Transação",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    val content = @Composable {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 80.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 80.dp)
         ) {
             item {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -199,7 +138,7 @@ fun HomeScreen(
                                 )
                             } else {
                                 Text(
-                                    text = "••••••",
+                                    text = "\u2022\u2022\u2022\u2022\u2022\u2022",
                                     style = MaterialTheme.typography.displayLarge,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -243,7 +182,7 @@ fun HomeScreen(
                                 modifier = Modifier.size(12.dp)
                             )
                             Text(
-                                text = if (trendInfo.second) "+${"%.1f".format(trendInfo.third)}% este mês" else "-${"%.1f".format(trendInfo.third)}% este mês",
+                                text = if (trendInfo.second) "+${"%.1f".format(trendInfo.third)}% este m\u00eas" else "-${"%.1f".format(trendInfo.third)}% este m\u00eas",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = if (trendInfo.second) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
                                 fontWeight = FontWeight.SemiBold
@@ -395,7 +334,7 @@ fun HomeScreen(
                                     )
                                 }
                                 Text(
-                                    text = "Saídas",
+                                    text = "Sa\u00eddas",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -436,7 +375,7 @@ fun HomeScreen(
                                     )
                                 }
                                 Text(
-                                    text = "Poupança",
+                                    text = "Poupan\u00e7a",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -467,13 +406,13 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Evolução financeira",
+                                text = "Evolu\u00e7\u00e3o financeira",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Últimos 30 dias",
+                                text = "\u00daltimos 30 dias",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -559,7 +498,7 @@ fun HomeScreen(
                                     Text("Despesas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                            Text("Últimos 7 dias", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+                            Text("\u00daltimos 7 dias", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                         }
                     }
                 }
@@ -572,7 +511,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Transações recentes",
+                        text = "Transa\u00e7\u00f5es recentes",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold
@@ -607,7 +546,7 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                "Nenhuma transação ainda.",
+                                "Nenhuma transa\u00e7\u00e3o ainda.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -620,6 +559,74 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            com.zacariasthequimo.flowcash.ui.UserAvatar(
+                                photoPath = profilePhotoPath,
+                                userName = userName
+                            )
+                            Column {
+                                Text(
+                                    text = "Bom dia,",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = userName,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifica\u00e7\u00f5es",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = onNavigateToNewTransaction,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .padding(bottom = 16.dp, end = 8.dp)
+                        .testTag("add_transaction_fab")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Nova Transa\u00e7\u00e3o",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                content()
+            }
+        }
+    } else {
+        content()
     }
 }
 
@@ -654,11 +661,11 @@ fun TransactionItem(tx: Transaction) {
             ) {
                 val icon = when (tx.category.lowercase()) {
                     "compras" -> Icons.Default.ShoppingCart
-                    "alimentação" -> Icons.Default.Restaurant
+                    "alimenta\u00e7\u00e3o" -> Icons.Default.Restaurant
                     "transporte" -> Icons.Default.DirectionsCar
                     "utilidades" -> Icons.Default.Bolt
                     "rendimento" -> Icons.Default.Payments
-                    "salário" -> Icons.Default.AccountBalance
+                    "sal\u00e1rio" -> Icons.Default.AccountBalance
                     "freelance" -> Icons.Default.Computer
                     "investimentos" -> Icons.Default.TrendingUp
                     "presente" -> Icons.Default.CardGiftcard

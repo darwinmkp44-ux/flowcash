@@ -36,24 +36,32 @@ fun NewTransactionScreen(
 ) {
     var amountStr by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("DESPESA") } // "DESPESA" or "RECEITA"
+    var type by remember { mutableStateOf("DESPESA") }
     var selectedCategory by remember { mutableStateOf("Compras") }
     var description by remember { mutableStateOf("") }
 
-    val expenseCategories = listOf("Compras", "Alimentação", "Transporte", "Outros")
-    val incomeCategories = listOf("Salário", "Freelance", "Investimentos", "Presente", "Outros")
+    val expenseCategories = listOf("Compras", "Alimenta\u00e7\u00e3o", "Transporte", "Outros")
+    val incomeCategories = listOf("Sal\u00e1rio", "Freelance", "Investimentos", "Presente", "Outros")
     val categories = if (type == "DESPESA") expenseCategories else incomeCategories
 
     LaunchedEffect(type) {
         selectedCategory = categories.first()
     }
 
+    val iosInputColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        cursorColor = MaterialTheme.colorScheme.primary
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Nova Transação",
+                        "Nova Transa\u00e7\u00e3o",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
@@ -83,14 +91,13 @@ fun NewTransactionScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
-            // AMOUNT INPUT SECTION
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "VALOR DA TRANSAÇÃO",
+                    text = "VALOR DA TRANSA\u00c7\u00c3O",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
@@ -110,7 +117,6 @@ fun NewTransactionScreen(
                     TextField(
                         value = amountStr,
                         onValueChange = { input ->
-                            // Allow digits and single decimal dot
                             if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
                                 amountStr = input
                             }
@@ -144,17 +150,14 @@ fun NewTransactionScreen(
                 }
             }
 
-            // TYPE SELECTOR BAR (DESPESA vs RECEITA)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)), RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Despesa Button
                 val despesaBg by animateColorAsState(
                     targetValue = if (type == "DESPESA") MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                     label = "despesa"
@@ -194,7 +197,6 @@ fun NewTransactionScreen(
                     }
                 }
 
-                // Receita Button
                 val receitaBg by animateColorAsState(
                     targetValue = if (type == "RECEITA") MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                     label = "receita"
@@ -235,19 +237,16 @@ fun NewTransactionScreen(
                 }
             }
 
-            // FIELDS BLOCK
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // CATEGORY SELECTION TITLE
                 Text(
                     text = "CATEGORIA",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Category Buttons Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -255,12 +254,8 @@ fun NewTransactionScreen(
                     categories.forEach { cat ->
                         val isSelected = selectedCategory == cat
                         val catBgColor by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
+                            targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
                             label = "catBg"
-                        )
-                        val catOutlineColor by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                            label = "catOutline"
                         )
 
                         Card(
@@ -274,8 +269,7 @@ fun NewTransactionScreen(
                                 }
                                 .testTag("cat_card_$cat"),
                             colors = CardDefaults.cardColors(containerColor = catBgColor),
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, catOutlineColor)
+                            shape = RoundedCornerShape(10.dp)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -286,9 +280,9 @@ fun NewTransactionScreen(
                             ) {
                                 val catIcon = when (cat) {
                                     "Compras" -> Icons.Default.ShoppingCart
-                                    "Alimentação" -> Icons.Default.Restaurant
+                                    "Alimenta\u00e7\u00e3o" -> Icons.Default.Restaurant
                                     "Transporte" -> Icons.Default.DirectionsCar
-                                    "Salário" -> Icons.Default.AccountBalance
+                                    "Sal\u00e1rio" -> Icons.Default.AccountBalance
                                     "Freelance" -> Icons.Default.Computer
                                     "Investimentos" -> Icons.Default.TrendingUp
                                     "Presente" -> Icons.Default.CardGiftcard
@@ -314,9 +308,8 @@ fun NewTransactionScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Title Input
                 Text(
-                    text = "TÍTULO DA TRANSAÇÃO",
+                    text = "T\u00cdTULO DA TRANSA\u00c7\u00c3O",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -327,14 +320,14 @@ fun NewTransactionScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("title_input"),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = iosInputColors
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Description Input
                 Text(
-                    text = "DESCRIÇÃO",
+                    text = "DESCRI\u00c7\u00c3O",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -346,11 +339,11 @@ fun NewTransactionScreen(
                         .fillMaxWidth()
                         .height(100.dp)
                         .testTag("description_input"),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = iosInputColors
                 )
             }
 
-            // ACTION BUTTON (SALVAR)
             Button(
                 onClick = {
                     val amount = amountStr.toDoubleOrNull() ?: 0.0

@@ -26,3 +26,23 @@
 - Removidas referências a tipografia personalizada inexistente (footnote, callout, caption)
 - Corrigido uso de MaterialTheme.colorScheme dentro de Canvas
 - Corrigido parâmetro shadowElevation não encontrado no NavigationBar
+
+## v2.1.0 - Melhorias iOS + Módulos + Grid + Notificações
+
+### Novidades
+- **Tela de permissão de notificações** após onboarding (página 4)
+- **Módulos salvos** em SharedPreferences e escondem blocos desativados da tela Business
+- **Blocos Business lado a lado** em grid de 2 colunas
+- **Nome/foto em cima** dos filtros no Pessoal (Business app)
+
+### Mudanças
+- Botão + central convertido de FAB para NavigationBarItem normal
+- Inputs iOS: fundo `surfaceContainerLow`, bordo sutil, cantos 12dp (Home/History/Goals/NewTransaction/Onboarding)
+- HomeScreen, HistoryScreen, GoalsScreen, AnalyticsScreen: `showTopBar` param para funcionar embutidas no ProFinances
+- NotificationPermissionScreen extraída para OnboardingScreen.kt (shared)
+- Proc apps também mostram ecrã de permissão após onboarding
+
+### Correções
+- `$r.totalSales` → `${r.totalSales}` no ProfitLossReport (estava a mostrar "ProfitLossReport(...)")
+- FontWeight.Bold → FontWeight.SemiBold no ProfitLossScreen
+- Duplicação de NotificationPermissionScreen resolvida

@@ -34,13 +34,14 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    viewModel: FinanceViewModel
+    viewModel: FinanceViewModel,
+    showTopBar: Boolean = true
 ) {
     val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilterTab by remember { mutableStateOf("Mês") } // "Hoje", "Semana", "Mês"
+    var selectedFilterTab by remember { mutableStateOf("M\u00eas") }
 
     val filteredTransactions = remember(transactions, searchQuery, selectedFilterTab) {
         transactions.filter { tx ->
@@ -53,7 +54,7 @@ fun HistoryScreen(
             val matchesTab = when (selectedFilterTab) {
                 "Hoje" -> now - tx.date <= dayMills
                 "Semana" -> now - tx.date <= 7 * dayMills
-                "Mês" -> now - tx.date <= 30 * dayMills
+                "M\u00eas" -> now - tx.date <= 30 * dayMills
                 else -> true
             }
 
@@ -61,55 +62,27 @@ fun HistoryScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        UserAvatar(
-                            photoPath = profilePhotoPath,
-                            userName = userName
-                        )
-                        Text(
-                            "Histórico",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = "Notificações",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    val iosInputColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        cursorColor = MaterialTheme.colorScheme.primary
+    )
+
+    val content = @Composable {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // SEARCH FIELD
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        "Buscar transações...",
+                        "Buscar transa\u00e7\u00f5es...",
                         style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.outlineVariant)
                     )
                 },
@@ -131,15 +104,9 @@ fun HistoryScreen(
                     .fillMaxWidth()
                     .testTag("search_input"),
                 shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                )
+                colors = iosInputColors
             )
 
-            // FILTER TABS BAR (Hoje, Semana, Mês)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -148,17 +115,17 @@ fun HistoryScreen(
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                listOf("Hoje", "Semana", "Mês").forEach { tab ->
+                listOf("Hoje", "Semana", "M\u00eas").forEach { tab ->
                     val isSelected = selectedFilterTab == tab
-                    val tabBgColorColors = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                    val tabTextColorColors = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                    val tabBgColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                    val tabTextColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
 
                     Card(
                         modifier = Modifier
                             .weight(1f)
                             .clickable { selectedFilterTab = tab }
                             .testTag("filter_tab_$tab"),
-                        colors = CardDefaults.cardColors(containerColor = tabBgColorColors),
+                        colors = CardDefaults.cardColors(containerColor = tabBgColor),
                         shape = RoundedCornerShape(50)
                     ) {
                         Box(
@@ -170,7 +137,7 @@ fun HistoryScreen(
                             Text(
                                 text = tab,
                                 style = MaterialTheme.typography.labelLarge,
-                                color = tabTextColorColors,
+                                color = tabTextColor,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -178,7 +145,6 @@ fun HistoryScreen(
                 }
             }
 
-            // TRANSACTIONS LIST
             if (filteredTransactions.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -197,7 +163,7 @@ fun HistoryScreen(
                             modifier = Modifier.size(64.dp)
                         )
                         Text(
-                            text = "Nenhuma transação encontrada",
+                            text = "Nenhuma transa\u00e7\u00e3o encontrada",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             fontWeight = FontWeight.SemiBold
@@ -226,6 +192,50 @@ fun HistoryScreen(
                 }
             }
         }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            UserAvatar(
+                                photoPath = profilePhotoPath,
+                                userName = userName
+                            )
+                            Text(
+                                "Hist\u00f3rico",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifica\u00e7\u00f5es",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding).padding(top = 8.dp)) {
+                content()
+            }
+        }
+    } else {
+        content()
     }
 }
 
@@ -261,21 +271,19 @@ fun HistoryTransactionItem(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                // Category icon selector
                 val icon = when (tx.category.lowercase()) {
                     "compras" -> Icons.Default.ShoppingCart
-                    "alimentação" -> Icons.Default.Restaurant
+                    "alimenta\u00e7\u00e3o" -> Icons.Default.Restaurant
                     "transporte" -> Icons.Default.DirectionsCar
                     "utilidades" -> Icons.Default.Bolt
                     "rendimento" -> Icons.Default.Payments
-                    "salário" -> Icons.Default.AccountBalance
+                    "sal\u00e1rio" -> Icons.Default.AccountBalance
                     "freelance" -> Icons.Default.Computer
                     "investimentos" -> Icons.Default.TrendingUp
                     "presente" -> Icons.Default.CardGiftcard
                     else -> Icons.Default.Category
                 }
 
-                // Clean Minimalist categorical colors matching Design spec
                 val isReceita = tx.type == "RECEITA"
                 val (iconBg, iconColor) = if (isReceita) {
                     MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.secondary
@@ -338,7 +346,7 @@ fun HistoryTransactionItem(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.DeleteOutline,
-                        contentDescription = "Deletar Transação",
+                        contentDescription = "Deletar Transa\u00e7\u00e3o",
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
