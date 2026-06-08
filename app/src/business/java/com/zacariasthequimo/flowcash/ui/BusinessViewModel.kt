@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.zacariasthequimo.flowcash.data.dao.CustomerDao
 import com.zacariasthequimo.flowcash.data.dao.DebtDao
+import com.zacariasthequimo.flowcash.data.dao.PaymentMethodRevenue
 import com.zacariasthequimo.flowcash.data.dao.ProductDao
 import com.zacariasthequimo.flowcash.data.dao.SaleDao
 import com.zacariasthequimo.flowcash.data.dao.TeamMemberDao
@@ -153,6 +154,9 @@ class BusinessViewModel(application: Application) : FinanceViewModel(application
     private val _grossProfit = MutableStateFlow(0.0)
     val grossProfit: StateFlow<Double> = _grossProfit.asStateFlow()
 
+    private val _paymentMethodRevenue = MutableStateFlow<List<PaymentMethodRevenue>>(emptyList())
+    val paymentMethodRevenue: StateFlow<List<PaymentMethodRevenue>> = _paymentMethodRevenue.asStateFlow()
+
     fun refreshDashboard() {
         viewModelScope.launch {
             val cal = Calendar.getInstance()
@@ -178,6 +182,9 @@ class BusinessViewModel(application: Application) : FinanceViewModel(application
             // Gross profit: estimate (subtotal as proxy for revenue) - cost
             // For a simple estimate, use monthSubtotal as revenue
             _grossProfit.value = monthRev - (monthSubtotal * 0.6)
+
+            val paymentRev = saleDao.getRevenueByPaymentMethod(monthStart, System.currentTimeMillis())
+            _paymentMethodRevenue.value = paymentRev
         }
     }
 

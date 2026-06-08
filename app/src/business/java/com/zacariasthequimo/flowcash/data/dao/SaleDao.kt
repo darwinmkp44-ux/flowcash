@@ -39,4 +39,12 @@ interface SaleDao {
 
     @Query("SELECT COUNT(*) FROM sales WHERE date >= :start AND date <= :end")
     suspend fun getSalesCountInRange(start: Long, end: Long): Int
+
+    @Query("SELECT paymentMethod, SUM(total) AS total FROM sales WHERE date >= :start AND date <= :end GROUP BY paymentMethod")
+    suspend fun getRevenueByPaymentMethod(start: Long, end: Long): List<PaymentMethodRevenue>
 }
+
+data class PaymentMethodRevenue(
+    val paymentMethod: String,
+    val total: Double
+)
