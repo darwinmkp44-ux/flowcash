@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -67,13 +68,6 @@ class BusinessMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
-                    .launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-
         val businessViewModel = ViewModelProvider(this)[BusinessViewModel::class.java]
         val financeViewModel = businessViewModel as FinanceViewModel
 
@@ -131,7 +125,17 @@ fun BusinessOrchestrator(
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
 
-    val activeSubScreen = activeBlock != null || showAccountDetail || showSecurity || showExport
+    val activeSubScreen = activeBlock != null || isAddingTransaction || showAccountDetail || showSecurity || showExport
+
+    BackHandler(enabled = activeSubScreen) {
+        when {
+            activeBlock != null -> activeBlock = null
+            isAddingTransaction -> isAddingTransaction = false
+            showAccountDetail -> showAccountDetail = false
+            showSecurity -> showSecurity = false
+            showExport -> showExport = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -164,19 +168,14 @@ fun BusinessOrchestrator(
                                 onClick = { isAddingTransaction = true },
                                 icon = {
                                     Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .then(
-                                                if (isSelected) Modifier else Modifier
-                                            ),
+                                        modifier = Modifier.size(36.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             Icons.Filled.Add,
                                             contentDescription = "Nova Transa\u00e7\u00e3o",
                                             modifier = Modifier.size(24.dp),
-                                            tint = if (isSelected) MaterialTheme.colorScheme.primary
-                                                   else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 },

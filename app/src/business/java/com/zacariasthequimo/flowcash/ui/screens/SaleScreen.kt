@@ -117,6 +117,7 @@ private fun NewSaleSheet(
     val products by viewModel.products.collectAsState()
     val customers by viewModel.customers.collectAsState()
 
+    var step by remember { mutableStateOf(0) }
     var selectedCustomerId by remember { mutableStateOf<Long?>(null) }
     var customerName by remember { mutableStateOf("") }
     var selectedItems by remember { mutableStateOf<List<SaleItem>>(emptyList()) }
@@ -142,88 +143,105 @@ private fun NewSaleSheet(
 
         Spacer(Modifier.height(8.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
-            // Customer selection
-            item {
-                CustomerSelector(
-                    customers = customers,
-                    selectedCustomerId = selectedCustomerId,
-                    customerName = customerName,
-                    onSelect = { id, name ->
-                        selectedCustomerId = id
-                        customerName = name
-                    }
-                )
-            }
-
-            // Add products
-            item {
-                OutlinedCard(
-                    onClick = { showProductPicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Outlined.AddCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text("Adicionar Produtos", fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
-
-            // Selected items
-            items(selectedItems, key = { "${it.productId}_${it.name}" }) { item ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(item.name, fontWeight = FontWeight.SemiBold)
-                            Text("${item.quantity}x ${nf.format(item.unitPrice)} MT", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Text("${nf.format(item.total)} MT", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-
-            // Payment method
-            item {
-                Text("Método de Pagamento", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Dinheiro", "Cartão", "Transferência", "Outro").forEach { method ->
-                        FilterChip(
-                            selected = paymentMethod == method,
-                            onClick = { paymentMethod = method },
-                            label = { Text(method, fontSize = 11.sp) }
-                        )
-                    }
-                }
-            }
-
-            // Discount
-            item {
-                OutlinedTextField(
-                    value = discount,
-                    onValueChange = { discount = it },
-                    label = { Text("Desconto (MT)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf("Cliente", "Produtos", "Pagamento").forEachIndexed { i, label ->
+                FilterChip(
+                    selected = step == i,
+                    onClick = { step = i },
+                    label = { Text(label, fontSize = 10.sp) },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        // Totals and confirm
+        Spacer(Modifier.height(12.dp))
+
+        Box(modifier = Modifier.weight(1f)) {
+            when (step) {
+                0 -> {
+                    Column {
+                        CustomerSelector(
+                            customers = customers,
+                            selectedCustomerId = selectedCustomerId,
+                            customerName = customerName,
+                            onSelect = { id, name ->
+                                selectedCustomerId = id
+                                customerName = name
+                            }
+                        )
+                    }
+                }
+                1 -> {
+                    Column {
+                        OutlinedCard(
+                            onClick = { showProductPicker = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Outlined.AddCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Text("Adicionar Produtos", fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        if (selectedItems.isEmpty()) {
+                            Text("Nenhum produto selecionado", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                items(selectedItems, key = { "${it.productId}_${it.name}" }) { item ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(item.name, fontWeight = FontWeight.SemiBold)
+                                                Text("${item.quantity}x ${nf.format(item.unitPrice)} MT", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                            Text("${nf.format(item.total)} MT", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                2 -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Método de Pagamento", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("Dinheiro", "Cartão", "Transferência", "Outro").forEach { method ->
+                                FilterChip(
+                                    selected = paymentMethod == method,
+                                    onClick = { paymentMethod = method },
+                                    label = { Text(method, fontSize = 11.sp) }
+                                )
+                            }
+                        }
+                        OutlinedTextField(
+                            value = discount,
+                            onValueChange = { discount = it },
+                            label = { Text("Desconto (MT)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -245,28 +263,38 @@ private fun NewSaleSheet(
                     Text("Total", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("${nf.format(total)} MT", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = {
-                        if (selectedItems.isNotEmpty()) {
-                            val itemsJson = selectedItems.joinToString("|") { "${it.productId}:${it.name}:${it.quantity}:${it.unitPrice}:${it.total}" }
-                            viewModel.addSale(
-                                customerId = selectedCustomerId,
-                                customerName = customerName,
-                                itemsJson = itemsJson,
-                                subtotal = subtotal,
-                                discount = discountVal,
-                                total = total,
-                                paymentMethod = paymentMethod
-                            )
-                            onDismiss()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    enabled = selectedItems.isNotEmpty(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Finalizar Venda", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                if (step < 2) {
+                    Button(
+                        onClick = { step++ },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Próximo", fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            if (selectedItems.isNotEmpty()) {
+                                val itemsJson = selectedItems.joinToString("|") { "${it.productId}:${it.name}:${it.quantity}:${it.unitPrice}:${it.total}" }
+                                viewModel.addSale(
+                                    customerId = selectedCustomerId,
+                                    customerName = customerName,
+                                    itemsJson = itemsJson,
+                                    subtotal = subtotal,
+                                    discount = discountVal,
+                                    total = total,
+                                    paymentMethod = paymentMethod
+                                )
+                                onDismiss()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        enabled = selectedItems.isNotEmpty(),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Finalizar Venda", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

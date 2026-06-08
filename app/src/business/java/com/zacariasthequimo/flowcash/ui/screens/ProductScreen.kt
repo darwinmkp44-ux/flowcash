@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.data.entity.Product
 import com.zacariasthequimo.flowcash.ui.BusinessViewModel
 import java.io.File
@@ -189,6 +190,7 @@ private fun AddProductDialog(
     var category by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var photoPath by remember { mutableStateOf("") }
+    var step by remember { mutableStateOf(0) }
     val context = LocalContext.current
 
     val pickPhotoLauncher = rememberLauncherForActivityResult(
@@ -218,45 +220,74 @@ private fun AddProductDialog(
         title = { Text("Novo Produto", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .clickable { pickPhotoLauncher.launch("image/*") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (photoBitmap != null) {
-                        Image(bitmap = photoBitmap, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Outlined.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
-                            Text("Foto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                        }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf("Detalhes", "Preços").forEachIndexed { i, label ->
+                        FilterChip(
+                            selected = step == i,
+                            onClick = { step = i },
+                            label = { Text(label, fontSize = 11.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome *") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descrição") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), maxLines = 2)
-                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Preço (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Custo (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Stock inicial") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Categoria") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                Spacer(Modifier.height(4.dp))
+                when (step) {
+                    0 -> {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                .clickable { pickPhotoLauncher.launch("image/*") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (photoBitmap != null) {
+                                Image(bitmap = photoBitmap, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Outlined.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                                    Text("Foto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                        }
+                        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome *") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                        OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Categoria") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                    }
+                    1 -> {
+                        OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Preço (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Custo (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Stock inicial") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                    }
+                }
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val p = price.replace(",", ".").toDoubleOrNull() ?: 0.0
-                    val c = cost.replace(",", ".").toDoubleOrNull() ?: 0.0
-                    val s = stock.toIntOrNull() ?: 0
-                    if (name.isNotBlank()) onConfirm(name, description, p, c, s, category, photoPath)
-                },
-                enabled = name.isNotBlank(),
-                shape = RoundedCornerShape(12.dp)
-            ) { Text("Adicionar") }
+            if (step == 0) {
+                Button(
+                    onClick = { step = 1 },
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Próximo") }
+            } else {
+                Button(
+                    onClick = {
+                        val p = price.replace(",", ".").toDoubleOrNull() ?: 0.0
+                        val c = cost.replace(",", ".").toDoubleOrNull() ?: 0.0
+                        val s = stock.toIntOrNull() ?: 0
+                        if (name.isNotBlank()) onConfirm(name, description, p, c, s, category, photoPath)
+                    },
+                    enabled = name.isNotBlank(),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Adicionar") }
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = {
+            if (step == 0) {
+                TextButton(onClick = onDismiss) { Text("Cancelar") }
+            } else {
+                TextButton(onClick = { step = 0 }) { Text("Voltar") }
+            }
+        }
     )
 }
 
@@ -275,6 +306,7 @@ private fun EditProductDialog(
     var stock by remember { mutableStateOf(product.stockQty.toString()) }
     var category by remember { mutableStateOf(product.category) }
     var photoPath by remember { mutableStateOf(product.photoPath) }
+    var step by remember { mutableStateOf(0) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -304,50 +336,79 @@ private fun EditProductDialog(
         title = { Text("Editar Produto", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        .clickable { pickPhotoLauncher.launch("image/*") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (editPhotoBitmap != null) {
-                        Image(bitmap = editPhotoBitmap, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Outlined.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
-                            Text("Alterar foto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                        }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf("Detalhes", "Preços").forEachIndexed { i, label ->
+                        FilterChip(
+                            selected = step == i,
+                            onClick = { step = i },
+                            label = { Text(label, fontSize = 11.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descrição") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), maxLines = 2)
-                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Preço (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Custo (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Stock") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Categoria") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                if (showDeleteConfirm) {
-                    Button(onClick = onDelete, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        Text("Confirmar Exclusão")
+                Spacer(Modifier.height(4.dp))
+                when (step) {
+                    0 -> {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                .clickable { pickPhotoLauncher.launch("image/*") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (editPhotoBitmap != null) {
+                                Image(bitmap = editPhotoBitmap, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Outlined.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                                    Text("Alterar foto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                        }
+                        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                        OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Categoria") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                     }
-                } else {
-                    TextButton(onClick = { showDeleteConfirm = true }) { Text("Eliminar Produto", color = MaterialTheme.colorScheme.error) }
+                    1 -> {
+                        OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Preço (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        OutlinedTextField(value = cost, onValueChange = { cost = it }, label = { Text("Custo (MT)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Stock") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        if (showDeleteConfirm) {
+                            Button(onClick = onDelete, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                                Text("Confirmar Exclusão")
+                            }
+                        } else {
+                            TextButton(onClick = { showDeleteConfirm = true }) { Text("Eliminar Produto", color = MaterialTheme.colorScheme.error) }
+                        }
+                    }
                 }
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val p = price.replace(",", ".").toDoubleOrNull() ?: product.price
-                    val c = cost.replace(",", ".").toDoubleOrNull() ?: product.cost
-                    val s = stock.toIntOrNull() ?: product.stockQty
-                    onUpdate(product.copy(name = name, description = description, price = p, cost = c, stockQty = s, category = category, photoPath = photoPath))
-                },
-                shape = RoundedCornerShape(12.dp)
-            ) { Text("Salvar") }
+            if (step == 0) {
+                Button(
+                    onClick = { step = 1 },
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Próximo") }
+            } else {
+                Button(
+                    onClick = {
+                        val p = price.replace(",", ".").toDoubleOrNull() ?: product.price
+                        val c = cost.replace(",", ".").toDoubleOrNull() ?: product.cost
+                        val s = stock.toIntOrNull() ?: product.stockQty
+                        onUpdate(product.copy(name = name, description = description, price = p, cost = c, stockQty = s, category = category, photoPath = photoPath))
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Salvar") }
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = {
+            if (step == 0) {
+                TextButton(onClick = onDismiss) { Text("Cancelar") }
+            } else {
+                TextButton(onClick = { step = 0 }) { Text("Voltar") }
+            }
+        }
     )
 }

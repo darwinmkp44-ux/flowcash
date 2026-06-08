@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -104,7 +105,16 @@ fun AppOrchestrator(
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
 
-    val activeSubScreen = showAccountDetail || showSecurity || showExport
+    val activeSubScreen = isAddingTransaction || showAccountDetail || showSecurity || showExport
+
+    BackHandler(enabled = activeSubScreen) {
+        when {
+            isAddingTransaction -> isAddingTransaction = false
+            showAccountDetail -> showAccountDetail = false
+            showSecurity -> showSecurity = false
+            showExport -> showExport = false
+        }
+    }
 
     Scaffold(
         bottomBar = {
