@@ -15,12 +15,12 @@ android {
     create("pro") {
       dimension = "version"
       applicationId = "com.zacariasthequimo.flowcash"
-      versionName = "1.2.0"
+      versionName = "2.5.0"
     }
     create("business") {
       dimension = "version"
       applicationId = "com.zacariasthequimo.flowcash.business"
-      versionName = "1.2.0"
+      versionName = "2.5.0"
     }
   }
 
@@ -28,7 +28,7 @@ android {
     applicationId = "com.zacariasthequimo.flowcash"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
+    versionCode = 5
     versionName = "1.2.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
