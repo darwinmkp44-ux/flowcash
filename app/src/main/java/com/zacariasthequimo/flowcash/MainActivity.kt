@@ -11,8 +11,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -20,10 +23,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -66,7 +73,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-enum class BottomNavTab(
+enum class ProTab(
     val route: String,
     val title: String,
     val activeIcon: ImageVector,
@@ -74,7 +81,7 @@ enum class BottomNavTab(
 ) {
     HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
     HISTORY("history", "Hist\u00f3rico", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
-    ANALYTICS("analytics", "Estat\u00edsticas", Icons.Filled.Leaderboard, Icons.Outlined.Leaderboard),
+    ESTATISTICAS("estatisticas", "Estat\u00edsticas", Icons.Filled.Leaderboard, Icons.Outlined.Leaderboard),
     GOALS("goals", "Metas", Icons.Filled.TrackChanges, Icons.Outlined.TrackChanges),
     PROFILE("profile", "Perfil", Icons.Filled.Person, Icons.Outlined.Person)
 }
@@ -83,7 +90,7 @@ enum class BottomNavTab(
 fun AppOrchestrator(
     viewModel: FinanceViewModel
 ) {
-    var activeTab by remember { mutableStateOf(BottomNavTab.HOME) }
+    var activeTab by remember { mutableStateOf(ProTab.HOME) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
@@ -100,68 +107,97 @@ fun AppOrchestrator(
 
     var showTransactionDialog by remember { mutableStateOf(false) }
 
+    val navItems = ProTab.entries.toList()
+
     Scaffold(
         bottomBar = {
             if (!activeSubScreen) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier.testTag("bottom_nav_bar")
-                ) {
-                    BottomNavTab.entries.forEach { tab ->
-                        val isSelected = activeTab == tab
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = { activeTab = tab },
-                            icon = {
-                                Icon(
-                                    imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                                    contentDescription = tab.title,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            },
-                            label = {
-                                Text(
-                                    text = tab.title,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                        fontSize = 10.sp
-                                    )
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            ),
-                            modifier = Modifier.testTag("nav_item_${tab.route}")
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 0.dp,
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp)
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            navItems.forEachIndexed { index, tab ->
+                                if (index == 2) {
+                                    Spacer(modifier = Modifier.width(60.dp))
+                                } else {
+                                    val isSelected = activeTab == tab
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable { activeTab = tab }
+                                            .padding(vertical = 4.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
+                                                    else Color.Transparent
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                                                contentDescription = tab.title,
+                                                tint = if (isSelected) MaterialTheme.colorScheme.primary
+                                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = tab.title,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                                fontSize = 10.sp
+                                            ),
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                            textAlign = TextAlign.Center,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-25).dp)
+                            .size(64.dp)
+                            .shadow(12.dp, CircleShape)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable { showTransactionDialog = true }
+                            .testTag("add_button_nav"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Nova Transa\u00e7\u00e3o",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
             }
         },
-        floatingActionButton = {
-            if (!activeSubScreen) {
-                FloatingActionButton(
-                    onClick = { showTransactionDialog = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .size(68.dp)
-                        .testTag("add_transaction_fab")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Nova Transa\u00e7\u00e3o",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
-        },
-        floatingActionButtonPosition = FabPosition.Center,
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Box(
@@ -190,28 +226,28 @@ fun AppOrchestrator(
                 }
                 else -> {
                     when (activeTab) {
-                        BottomNavTab.HOME -> {
+                        ProTab.HOME -> {
                             HomeScreen(
                                 viewModel = viewModel,
-                                onNavigateToHistory = { activeTab = BottomNavTab.HISTORY }
+                                onNavigateToHistory = { activeTab = ProTab.HISTORY }
                             )
                         }
-                        BottomNavTab.HISTORY -> {
+                        ProTab.HISTORY -> {
                             HistoryScreen(
                                 viewModel = viewModel
                             )
                         }
-                        BottomNavTab.ANALYTICS -> {
+                        ProTab.ESTATISTICAS -> {
                             ResumoScreen(
                                 viewModel = viewModel
                             )
                         }
-                        BottomNavTab.GOALS -> {
+                        ProTab.GOALS -> {
                             GoalsScreen(
                                 viewModel = viewModel
                             )
                         }
-                        BottomNavTab.PROFILE -> {
+                        ProTab.PROFILE -> {
                             ProfileScreen(
                                 viewModel = viewModel,
                                 onNavigateToAccount = { showAccountDetail = true },

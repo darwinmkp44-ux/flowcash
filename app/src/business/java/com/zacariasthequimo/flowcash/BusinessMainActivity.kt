@@ -6,10 +6,15 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -21,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,10 +45,10 @@ enum class BizTab(
     val activeIcon: ImageVector,
     val inactiveIcon: ImageVector
 ) {
+    PESSOAL("pessoal", "Pessoal", Icons.Filled.Person, Icons.Outlined.Person),
     BUSINESS("business", "Business", Icons.Filled.Business, Icons.Outlined.Business),
     RESUMO("resumo", "Resumo", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-    DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings),
-    PESSOAL("pessoal", "Pessoal", Icons.Filled.Home, Icons.Outlined.Home)
+    DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings)
 }
 
 enum class BusinessBlock(val title: String, val icon: ImageVector, val description: String) {
@@ -95,7 +101,7 @@ class BusinessMainActivity : ComponentActivity() {
 fun BusinessOrchestrator(
     viewModel: BusinessViewModel
 ) {
-    var activeTab by remember { mutableStateOf(BizTab.BUSINESS) }
+    var activeTab by remember { mutableStateOf(BizTab.PESSOAL) }
     var activeBlock by remember { mutableStateOf<BusinessBlock?>(null) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
@@ -112,6 +118,8 @@ fun BusinessOrchestrator(
             showExport -> showExport = false
         }
     }
+
+    val bizNavItems = BizTab.entries.toList()
 
     Scaffold(
         topBar = {
@@ -131,62 +139,89 @@ fun BusinessOrchestrator(
         },
         bottomBar = {
             if (!activeSubScreen) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 0.dp
-                ) {
-                    BizTab.entries.forEach { tab ->
-                        val isSelected = activeTab == tab
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = { activeTab = tab },
-                            icon = {
-                                Icon(
-                                    if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                                    contentDescription = tab.title,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            },
-                            label = {
-                                Text(
-                                    tab.title,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                        fontSize = 10.sp
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 0.dp,
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp)
+                                .padding(start = 4.dp, end = 68.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            bizNavItems.forEach { tab ->
+                                val isSelected = activeTab == tab
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { activeTab = tab }
+                                        .padding(vertical = 4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(
+                                                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
+                                                else Color.Transparent
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                                            contentDescription = tab.title,
+                                            tint = if (isSelected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = tab.title,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                            fontSize = 10.sp
+                                        ),
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1
                                     )
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
+                                }
+                            }
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .offset(x = (-12).dp, y = (-25).dp)
+                            .size(64.dp)
+                            .shadow(12.dp, CircleShape)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable { showTransactionDialog = true }
+                            .testTag("add_button_nav"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Nova Transa\u00e7\u00e3o",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
             }
         },
-        floatingActionButton = {
-            if (!activeSubScreen) {
-                FloatingActionButton(
-                    onClick = { showTransactionDialog = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .size(68.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Nova Transa\u00e7\u00e3o",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
-        },
-        floatingActionButtonPosition = FabPosition.Center
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -220,6 +255,9 @@ fun BusinessOrchestrator(
                 }
                 else -> {
                     when (activeTab) {
+                        BizTab.PESSOAL -> {
+                            ProFinances(viewModel = viewModel)
+                        }
                         BizTab.BUSINESS -> {
                             BusinessBlocksScreen(
                                 viewModel = viewModel,
@@ -239,9 +277,6 @@ fun BusinessOrchestrator(
                                 onNavigateToSecurity = { showSecurity = true },
                                 onNavigateToExport = { showExport = true }
                             )
-                        }
-                        BizTab.PESSOAL -> {
-                            ProFinances(viewModel = viewModel)
                         }
                     }
                 }
