@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -38,10 +39,10 @@ enum class BizTab(
     val activeIcon: ImageVector,
     val inactiveIcon: ImageVector
 ) {
-    PESSOAL("pessoal", "Pessoal", Icons.Filled.Person, Icons.Outlined.Person),
     BUSINESS("business", "Business", Icons.Filled.Business, Icons.Outlined.Business),
     RESUMO("resumo", "Resumo", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-    DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings)
+    DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings),
+    PESSOAL("pessoal", "Pessoal", Icons.Filled.Home, Icons.Outlined.Home)
 }
 
 enum class BusinessBlock(val title: String, val icon: ImageVector, val description: String) {
@@ -94,11 +95,12 @@ class BusinessMainActivity : ComponentActivity() {
 fun BusinessOrchestrator(
     viewModel: BusinessViewModel
 ) {
-    var activeTab by remember { mutableStateOf(BizTab.PESSOAL) }
+    var activeTab by remember { mutableStateOf(BizTab.BUSINESS) }
     var activeBlock by remember { mutableStateOf<BusinessBlock?>(null) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
+    var showTransactionDialog by remember { mutableStateOf(false) }
 
     val activeSubScreen = activeBlock != null || showAccountDetail || showSecurity || showExport
 
@@ -165,7 +167,26 @@ fun BusinessOrchestrator(
                     }
                 }
             }
-        }
+        },
+        floatingActionButton = {
+            if (!activeSubScreen) {
+                FloatingActionButton(
+                    onClick = { showTransactionDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .size(68.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Nova Transa\u00e7\u00e3o",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -199,9 +220,6 @@ fun BusinessOrchestrator(
                 }
                 else -> {
                     when (activeTab) {
-                        BizTab.PESSOAL -> {
-                            ProFinances(viewModel = viewModel)
-                        }
                         BizTab.BUSINESS -> {
                             BusinessBlocksScreen(
                                 viewModel = viewModel,
@@ -209,12 +227,10 @@ fun BusinessOrchestrator(
                             )
                         }
                         BizTab.RESUMO -> {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                HomeScreen(
-                                    viewModel = viewModel,
-                                    onNavigateToHistory = { activeTab = BizTab.PESSOAL }
-                                )
-                            }
+                            ResumoScreen(
+                                viewModel = viewModel,
+                                showTopBar = false
+                            )
                         }
                         BizTab.DEFINICOES -> {
                             ProfileScreen(
@@ -224,10 +240,20 @@ fun BusinessOrchestrator(
                                 onNavigateToExport = { showExport = true }
                             )
                         }
+                        BizTab.PESSOAL -> {
+                            ProFinances(viewModel = viewModel)
+                        }
                     }
                 }
             }
         }
+    }
+
+    if (showTransactionDialog) {
+        TransactionDialog(
+            viewModel = viewModel,
+            onDismiss = { showTransactionDialog = false }
+        )
     }
 
 }
@@ -313,7 +339,7 @@ fun ProFinances(
                     viewModel = viewModel,
                     showTopBar = false
                 )
-                3 -> AnalyticsScreen(
+                 3 -> ResumoScreen(
                     viewModel = viewModel,
                     showTopBar = false
                 )

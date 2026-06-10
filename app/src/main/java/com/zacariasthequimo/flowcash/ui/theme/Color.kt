@@ -3,9 +3,9 @@ package com.zacariasthequimo.flowcash.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // iOS-inspired palette - Light
-val FlowPrimary = Color(0xFF0058BC)
+val FlowPrimary = Color(0xFF0066CC)
 val FlowOnPrimary = Color(0xFFFFFFFF)
-val FlowPrimaryContainer = Color(0xFF0070EB)
+val FlowPrimaryContainer = Color(0xFF4A90D9)
 val FlowOnPrimaryContainer = Color(0xFFFEFCFF)
 
 val FlowSecondary = Color(0xFF006E28)

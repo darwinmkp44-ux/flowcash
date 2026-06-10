@@ -1,0 +1,604 @@
+package com.zacariasthequimo.flowcash.ui.screens
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.TrendingDown
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.zacariasthequimo.flowcash.data.entity.Transaction
+import com.zacariasthequimo.flowcash.ui.FinanceViewModel
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ResumoScreen(
+    viewModel: FinanceViewModel,
+    showTopBar: Boolean = true
+) {
+    val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
+    val allTransactions by viewModel.transactions.collectAsState()
+    val userName by viewModel.userName.collectAsState()
+
+    var selectedFilter by remember { mutableStateOf(0) }
+
+    val now = System.currentTimeMillis()
+    val filteredTransactions = remember(allTransactions, selectedFilter) {
+        when (selectedFilter) {
+            1 -> {
+                val cutoff = now - 7L * 24 * 60 * 60 * 1000
+                allTransactions.filter { it.date >= cutoff }
+            }
+            2 -> {
+                val cutoff = now - 15L * 24 * 60 * 60 * 1000
+                allTransactions.filter { it.date >= cutoff }
+            }
+            3 -> {
+                val cutoff = now - 30L * 24 * 60 * 60 * 1000
+                allTransactions.filter { it.date >= cutoff }
+            }
+            else -> allTransactions
+        }
+    }
+
+    val totalIncome = filteredTransactions.filter { it.type == "RECEITA" }.sumOf { it.amount }
+    val totalExpenses = filteredTransactions.filter { it.type == "DESPESA" }.sumOf { it.amount }
+    val balance = totalIncome - totalExpenses
+
+    val numberFormat = NumberFormat.getNumberInstance(Locale("pt", "MZ")).apply {
+        minimumFractionDigits = 2
+        maximumFractionDigits = 2
+    }
+
+    val content = @Composable {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)
+        ) {
+            item {
+                ResumoFilterRow(
+                    selectedFilter = selectedFilter,
+                    onFilterSelected = { selectedFilter = it }
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SmallMetricCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Saldo",
+                        value = formatKValue(balance),
+                        color = MaterialTheme.colorScheme.primary,
+                        icon = Icons.Default.AccountBalanceWallet
+                    )
+                    SmallMetricCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Entradas",
+                        value = formatKValue(totalIncome),
+                        color = Color(0xFF15803D),
+                        icon = Icons.Default.TrendingUp
+                    )
+                    SmallMetricCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Gastos",
+                        value = formatKValue(totalExpenses),
+                        color = MaterialTheme.colorScheme.error,
+                        icon = Icons.Default.TrendingDown
+                    )
+                }
+            }
+
+            item {
+                ResumoIncomeExpenseChart(
+                    transactions = filteredTransactions,
+                    filter = selectedFilter
+                )
+            }
+
+            item {
+                ResumoExpenseCategoryChart(
+                    transactions = filteredTransactions,
+                    numberFormat = numberFormat
+                )
+            }
+        }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            com.zacariasthequimo.flowcash.ui.UserAvatar(
+                                photoPath = profilePhotoPath,
+                                userName = userName
+                            )
+                            Text(
+                                "Resumo",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                content()
+            }
+        }
+    } else {
+        content()
+    }
+}
+
+@Composable
+private fun ResumoFilterRow(
+    selectedFilter: Int,
+    onFilterSelected: (Int) -> Unit
+) {
+    val filters = listOf("Tudo", "7d", "15d", "30d")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        filters.forEachIndexed { index, label ->
+            val isSelected = selectedFilter == index
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.primary
+                        else Color.Transparent
+                    )
+                    .clickable { onFilterSelected(index) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmallMetricCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    value: String,
+    color: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(color.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                color = color,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun ResumoIncomeExpenseChart(
+    transactions: List<Transaction>,
+    filter: Int
+) {
+    val cal = Calendar.getInstance()
+    val now = System.currentTimeMillis()
+
+    val dailyData = remember(transactions, filter) {
+        val days = when (filter) {
+            1 -> 7
+            2 -> 15
+            3 -> 30
+            else -> 7
+        }
+        val bars = mutableListOf<Triple<String, Double, Double>>()
+        val sdf = SimpleDateFormat("dd/MM", Locale("pt", "MZ"))
+        for (i in days - 1 downTo 0) {
+            cal.timeInMillis = now
+            cal.add(Calendar.DAY_OF_MONTH, -i)
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            val dayStart = cal.timeInMillis
+            cal.add(Calendar.DAY_OF_MONTH, 1)
+            val dayEnd = cal.timeInMillis
+            val inc = transactions.filter { it.date in dayStart until dayEnd && it.type == "RECEITA" }.sumOf { it.amount }
+            val exp = transactions.filter { it.date in dayStart until dayEnd && it.type == "DESPESA" }.sumOf { it.amount }
+            bars.add(Triple(sdf.format(Date(dayStart)), inc, exp))
+        }
+        bars
+    }
+
+    val maxVal = dailyData.maxOfOrNull { maxOf(it.second, it.third) }?.coerceAtLeast(1.0) ?: 1.0
+
+    val animatedIncFactors = dailyData.mapIndexed { index, (_, inc, _) ->
+        val anim by animateFloatAsState(
+            targetValue = (inc / maxVal).toFloat().coerceIn(0f, 1f),
+            animationSpec = tween(600, delayMillis = index * 50),
+            label = "incBar_$index"
+        )
+        anim
+    }
+    val animatedExpFactors = dailyData.mapIndexed { index, (_, _, exp) ->
+        val anim by animateFloatAsState(
+            targetValue = (exp / maxVal).toFloat().coerceIn(0f, 1f),
+            animationSpec = tween(600, delayMillis = index * 50),
+            label = "expBar_$index"
+        )
+        anim
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Entradas vs Gastos",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            val incomeColor = Color(0xFF15803D)
+            val expenseColor = MaterialTheme.colorScheme.error
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+            ) {
+                val w = size.width
+                val h = size.height
+                val barCount = dailyData.size
+                val totalGap = (barCount - 1) * 6f
+                val barWidth = ((w - totalGap) / barCount) * 0.65f
+                val halfBar = barWidth / 2f
+                val chartTop = h * 0.1f
+                val chartHeight = h * 0.8f
+
+                drawLine(
+                    color = Color.Gray.copy(alpha = 0.2f),
+                    start = Offset(0f, h * 0.9f),
+                    end = Offset(w, h * 0.9f),
+                    strokeWidth = 1f
+                )
+
+                dailyData.forEachIndexed { index, _ ->
+                    val x = index * (barWidth + 6f)
+                    val incHeight = animatedIncFactors[index] * chartHeight
+                    val expHeight = animatedExpFactors[index] * chartHeight
+                    val baseY = h * 0.9f
+
+                    if (incHeight > 0f) {
+                        drawRect(
+                            color = incomeColor,
+                            topLeft = Offset(x, baseY - incHeight),
+                            size = Size(halfBar, incHeight)
+                        )
+                    }
+                    if (expHeight > 0f) {
+                        drawRect(
+                            color = expenseColor,
+                            topLeft = Offset(x + halfBar, baseY - expHeight),
+                            size = Size(halfBar, expHeight)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(incomeColor))
+                        Text("Entradas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(expenseColor))
+                        Text("Gastos", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                val periodLabel = when (filter) {
+                    1 -> "\u00daltimos 7 dias"
+                    2 -> "\u00daltimos 15 dias"
+                    3 -> "\u00daltimos 30 dias"
+                    else -> "\u00daltimos 7 dias"
+                }
+                Text(periodLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResumoExpenseCategoryChart(
+    transactions: List<Transaction>,
+    numberFormat: NumberFormat
+) {
+    val expenses = transactions.filter { it.type == "DESPESA" }
+    val totalExpenseAmount = expenses.sumOf { it.amount }
+
+    val categoryData = remember(expenses) {
+        val cats = linkedMapOf(
+            "Compras" to 0.0,
+            "Alimenta\u00e7\u00e3o" to 0.0,
+            "Transporte" to 0.0,
+            "Outros" to 0.0
+        )
+        expenses.forEach { tx ->
+            val key = if (cats.containsKey(tx.category)) tx.category else "Outros"
+            cats[key] = (cats[key] ?: 0.0) + tx.amount
+        }
+        cats.filter { it.value > 0.0 }
+    }
+
+    val categoryColors = listOf(
+        Color(0xFF15803D),
+        MaterialTheme.colorScheme.error,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.secondary
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Gastos por Categoria",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (totalExpenseAmount <= 0) {
+                Text(
+                    text = "Nenhum gasto registrado",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 20.dp).fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                val categoryList = categoryData.toList()
+
+                val animatedSweeps = categoryList.mapIndexed { index, (_, amount) ->
+                    val sweep by animateFloatAsState(
+                        targetValue = (amount / totalExpenseAmount * 360f).toFloat().coerceAtLeast(0.5f),
+                        animationSpec = tween(800, delayMillis = index * 100),
+                        label = "pieSweep_$index"
+                    )
+                    sweep
+                }
+
+                val strokeWidthPx = 22.dp
+                val bgCircleColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Canvas(modifier = Modifier.size(150.dp)) {
+                        val canvasSize = this.size
+                        val d = minOf(canvasSize.width, canvasSize.height)
+                        val topLeft = Offset(
+                            (canvasSize.width - d) / 2f,
+                            (canvasSize.height - d) / 2f
+                        )
+                        val arcSize = d
+                        val sw = strokeWidthPx.toPx()
+
+                        drawCircle(
+                            color = bgCircleColor,
+                            style = Stroke(width = sw)
+                        )
+
+                        var startAngle = -90f
+                        categoryList.forEachIndexed { i, _ ->
+                            val sweep = animatedSweeps[i]
+                            drawArc(
+                                color = categoryColors[i % categoryColors.size],
+                                startAngle = startAngle,
+                                sweepAngle = sweep,
+                                useCenter = false,
+                                topLeft = topLeft,
+                                size = Size(arcSize, arcSize),
+                                style = Stroke(width = sw, cap = StrokeCap.Butt)
+                            )
+                            startAngle += sweep
+                        }
+                    }
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = formatKValue(totalExpenseAmount),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "TOTAL",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                categoryList.forEachIndexed { index, (category, amount) ->
+                    val fraction = (amount / totalExpenseAmount).toFloat()
+                    val color = categoryColors[index % categoryColors.size]
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(color)
+                        )
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = category,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${"%.1f".format(fraction * 100)}%",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            val animatedProgress by animateFloatAsState(
+                                targetValue = fraction,
+                                animationSpec = tween(600, delayMillis = index * 100),
+                                label = "progress_$index"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(animatedProgress)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(color)
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = numberFormat.format(amount) + " MT",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

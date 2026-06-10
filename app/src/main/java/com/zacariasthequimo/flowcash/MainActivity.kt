@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -97,6 +98,8 @@ fun AppOrchestrator(
         }
     }
 
+    var showTransactionDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = {
             if (!activeSubScreen) {
@@ -139,6 +142,26 @@ fun AppOrchestrator(
                 }
             }
         },
+        floatingActionButton = {
+            if (!activeSubScreen) {
+                FloatingActionButton(
+                    onClick = { showTransactionDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .size(68.dp)
+                        .testTag("add_transaction_fab")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Nova Transa\u00e7\u00e3o",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Box(
@@ -179,7 +202,7 @@ fun AppOrchestrator(
                             )
                         }
                         BottomNavTab.ANALYTICS -> {
-                            AnalyticsScreen(
+                            ResumoScreen(
                                 viewModel = viewModel
                             )
                         }
@@ -200,5 +223,12 @@ fun AppOrchestrator(
                 }
             }
         }
+    }
+
+    if (showTransactionDialog) {
+        TransactionDialog(
+            viewModel = viewModel,
+            onDismiss = { showTransactionDialog = false }
+        )
     }
 }
