@@ -1,8 +1,7 @@
 package com.zacariasthequimo.flowcash.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,43 +16,70 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.data.entity.Transaction
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: FinanceViewModel,
-    onNavigateToNewTransaction: () -> Unit,
     onNavigateToHistory: () -> Unit,
     showTopBar: Boolean = true
 ) {
     val userName by viewModel.userName.collectAsState()
     val profilePhotoPath by viewModel.profilePhotoPath.collectAsState()
     val isBalanceVisible by viewModel.isBalanceVisible.collectAsState()
-    val transactions by viewModel.transactions.collectAsState()
-    val totalIncome by viewModel.totalIncome.collectAsState()
-    val totalExpenses by viewModel.totalExpenses.collectAsState()
+    val allTransactions by viewModel.transactions.collectAsState()
+    val totalIncomeAll by viewModel.totalIncome.collectAsState()
+    val totalExpensesAll by viewModel.totalExpenses.collectAsState()
     val poupancaSum by viewModel.poupancaSum.collectAsState()
 
-    val currentBalance = totalIncome - totalExpenses - poupancaSum
+    var selectedFilter by remember { mutableStateOf(0) }
+    var showTransactionDialog by remember { mutableStateOf(false) }
+
+    val now = System.currentTimeMillis()
+    val filteredTransactions = remember(allTransactions, selectedFilter) {
+        when (selectedFilter) {
+            1 -> {
+                val cutoff = now - 7L * 24 * 60 * 60 * 1000
+                allTransactions.filter { it.date >= cutoff }
+            }
+            2 -> {
+                val cutoff = now - 15L * 24 * 60 * 60 * 1000
+                allTransactions.filter { it.date >= cutoff }
+            }
+            3 -> {
+                val cutoff = now - 30L * 24 * 60 * 60 * 1000
+                allTransactions.filter { it.date >= cutoff }
+            }
+            else -> allTransactions
+        }
+    }
+
+    val totalIncome = filteredTransactions.filter { it.type == "RECEITA" }.sumOf { it.amount }
+    val totalExpenses = filteredTransactions.filter { it.type == "DESPESA" }.sumOf { it.amount }
+    val balance = totalIncome - totalExpenses
 
     val numberFormat = NumberFormat.getNumberInstance(Locale("pt", "MZ")).apply {
         minimumFractionDigits = 2
@@ -66,7 +92,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 4.dp, bottom = 80.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)
         ) {
             item {
                 Card(
@@ -77,9 +103,7 @@ fun HomeScreen(
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp)
-                    ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -118,6 +142,7 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        val currentBalanceAll = totalIncomeAll - totalExpensesAll - poupancaSum
                         Row(
                             verticalAlignment = Alignment.Bottom,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -130,7 +155,7 @@ fun HomeScreen(
                             )
                             if (isBalanceVisible) {
                                 Text(
-                                    text = numberFormat.format(currentBalance),
+                                    text = numberFormat.format(currentBalanceAll),
                                     style = MaterialTheme.typography.displayLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
@@ -145,21 +170,20 @@ fun HomeScreen(
                             }
                         }
 
-                        val trendInfo = remember(transactions) {
-                            val now = System.currentTimeMillis()
-                            val cal = java.util.Calendar.getInstance()
+                        val trendInfo = remember(allTransactions) {
+                            val cal = Calendar.getInstance()
                             cal.timeInMillis = now
-                            cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
-                            cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                            cal.set(java.util.Calendar.MINUTE, 0)
-                            cal.set(java.util.Calendar.SECOND, 0)
-                            cal.set(java.util.Calendar.MILLISECOND, 0)
+                            cal.set(Calendar.DAY_OF_MONTH, 1)
+                            cal.set(Calendar.HOUR_OF_DAY, 0)
+                            cal.set(Calendar.MINUTE, 0)
+                            cal.set(Calendar.SECOND, 0)
+                            cal.set(Calendar.MILLISECOND, 0)
                             val thisMonthStart = cal.timeInMillis
-                            cal.add(java.util.Calendar.MONTH, -1)
+                            cal.add(Calendar.MONTH, -1)
                             val lastMonthStart = cal.timeInMillis
 
-                            val thisTx = transactions.filter { it.date >= thisMonthStart }
-                            val lastTx = transactions.filter { it.date in lastMonthStart until thisMonthStart }
+                            val thisTx = allTransactions.filter { it.date >= thisMonthStart }
+                            val lastTx = allTransactions.filter { it.date in lastMonthStart until thisMonthStart }
                             val thisNet = thisTx.sumOf { if (it.type == "RECEITA") it.amount else -it.amount }
                             val lastNet = lastTx.sumOf { if (it.type == "RECEITA") it.amount else -it.amount }
                             val pct = if (lastNet != 0.0) ((thisNet - lastNet) / kotlin.math.abs(lastNet) * 100) else if (thisNet != 0.0) 100.0 else 0.0
@@ -191,26 +215,23 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            val incomeGrowth = remember(transactions) {
-                                val now = System.currentTimeMillis()
-                                val cal = java.util.Calendar.getInstance()
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            val incomeGrowth = remember(allTransactions) {
+                                val cal = Calendar.getInstance()
                                 cal.timeInMillis = now
-                                cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
-                                cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                                cal.set(java.util.Calendar.MINUTE, 0)
-                                cal.set(java.util.Calendar.SECOND, 0)
-                                cal.set(java.util.Calendar.MILLISECOND, 0)
+                                cal.set(Calendar.DAY_OF_MONTH, 1)
+                                cal.set(Calendar.HOUR_OF_DAY, 0)
+                                cal.set(Calendar.MINUTE, 0)
+                                cal.set(Calendar.SECOND, 0)
+                                cal.set(Calendar.MILLISECOND, 0)
                                 val thisStart = cal.timeInMillis
-                                cal.add(java.util.Calendar.MONTH, -1)
+                                cal.add(Calendar.MONTH, -1)
                                 val lastStart = cal.timeInMillis
-                                val thisInc = transactions.filter { it.date >= thisStart && it.type == "RECEITA" }.sumOf { it.amount }
-                                val lastInc = transactions.filter { it.date in lastStart until thisStart && it.type == "RECEITA" }.sumOf { it.amount }
+                                val thisInc = allTransactions.filter { it.date >= thisStart && it.type == "RECEITA" }.sumOf { it.amount }
+                                val lastInc = allTransactions.filter { it.date in lastStart until thisStart && it.type == "RECEITA" }.sumOf { it.amount }
                                 if (lastInc != 0.0) ((thisInc - lastInc) / lastInc * 100) else 0.0
                             }
-                            val economiaPct = if (totalIncome > 0) (poupancaSum / totalIncome * 100) else 0.0
+                            val economiaPct = if (totalIncomeAll > 0) (poupancaSum / totalIncomeAll * 100) else 0.0
 
                             Box(
                                 modifier = Modifier
@@ -263,245 +284,53 @@ fun HomeScreen(
             }
 
             item {
+                SummaryFilterRow(
+                    selectedFilter = selectedFilter,
+                    onFilterSelected = { selectedFilter = it }
+                )
+            }
+
+            item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Card(
+                    SmallMetricCard(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.TrendingUp,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                                Text(
-                                    text = "Entradas",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = formatKValue(totalIncome),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-
-                    Card(
+                        title = "Saldo",
+                        value = formatKValue(balance),
+                        color = MaterialTheme.colorScheme.primary,
+                        icon = Icons.Default.AccountBalanceWallet
+                    )
+                    SmallMetricCard(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.TrendingDown,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                                Text(
-                                    text = "Sa\u00eddas",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = formatKValue(totalExpenses),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-
-                    Card(
+                        title = "Entradas",
+                        value = formatKValue(totalIncome),
+                        color = Color(0xFF15803D),
+                        icon = Icons.Default.TrendingUp
+                    )
+                    SmallMetricCard(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Savings,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                                Text(
-                                    text = "Poupan\u00e7a",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = formatKValue(poupancaSum),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
+                        title = "Gastos",
+                        value = formatKValue(totalExpenses),
+                        color = MaterialTheme.colorScheme.error,
+                        icon = Icons.Default.TrendingDown
+                    )
                 }
             }
 
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Evolu\u00e7\u00e3o financeira",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "\u00daltimos 30 dias",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                IncomeExpenseChart(
+                    transactions = filteredTransactions,
+                    filter = selectedFilter
+                )
+            }
 
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        val dailyBars = remember(transactions) {
-                            val cal = java.util.Calendar.getInstance()
-                            val today = java.util.Calendar.getInstance()
-                            val bars = mutableListOf<Pair<Double, Double>>()
-                            for (i in 6 downTo 0) {
-                                cal.timeInMillis = today.timeInMillis
-                                cal.add(java.util.Calendar.DAY_OF_MONTH, -i)
-                                cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                                cal.set(java.util.Calendar.MINUTE, 0)
-                                cal.set(java.util.Calendar.SECOND, 0)
-                                cal.set(java.util.Calendar.MILLISECOND, 0)
-                                val dayStart = cal.timeInMillis
-                                cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
-                                val dayEnd = cal.timeInMillis
-                                val inc = transactions.filter { it.date in dayStart until dayEnd && it.type == "RECEITA" }.sumOf { it.amount }
-                                val exp = transactions.filter { it.date in dayStart until dayEnd && it.type == "DESPESA" }.sumOf { it.amount }
-                                bars.add(Pair(inc, exp))
-                            }
-                            bars
-                        }
-
-                        val maxBarValue = dailyBars.maxOfOrNull { maxOf(it.first, it.second) }?.coerceAtLeast(1.0) ?: 1.0
-
-                        val incomeColor = MaterialTheme.colorScheme.primaryContainer
-                        val expenseColor = MaterialTheme.colorScheme.error
-
-                        Canvas(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(140.dp)
-                        ) {
-                            val w = size.width
-                            val h = size.height
-                            val barCount = dailyBars.size
-                            val totalGap = (barCount - 1) * 8f
-                            val barWidth = ((w - totalGap) / barCount) * 0.7f
-                            val halfBar = barWidth / 2f
-
-                            dailyBars.forEachIndexed { index, (inc, exp) ->
-                                val x = index * (barWidth + 8f)
-                                val incHeight = (inc / maxBarValue * h * 0.8f).toFloat()
-                                val expHeight = (exp / maxBarValue * h * 0.8f).toFloat()
-                                val baseY = h * 0.9f
-
-                                if (incHeight > 0f) {
-                                    drawRect(
-                                        color = incomeColor,
-                                        topLeft = Offset(x, baseY - incHeight),
-                                        size = Size(halfBar, incHeight)
-                                    )
-                                }
-                                if (expHeight > 0f) {
-                                    drawRect(
-                                        color = expenseColor,
-                                        topLeft = Offset(x + halfBar, baseY - expHeight),
-                                        size = Size(halfBar, expHeight)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer))
-                                    Text("Receitas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.error))
-                                    Text("Despesas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                            Text("\u00daltimos 7 dias", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
-                        }
-                    }
-                }
+            item {
+                ExpenseCategoryChart(
+                    transactions = filteredTransactions,
+                    numberFormat = numberFormat
+                )
             }
 
             item {
@@ -511,7 +340,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Transa\u00e7\u00f5es recentes",
+                        text = "${filteredTransactions.size} transa\u00e7\u00f5es",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold
@@ -527,7 +356,7 @@ fun HomeScreen(
                 }
             }
 
-            if (transactions.isEmpty()) {
+            if (filteredTransactions.isEmpty()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -554,16 +383,41 @@ fun HomeScreen(
                     }
                 }
             } else {
-                items(transactions.take(5)) { tx ->
-                    TransactionItem(tx = tx)
+                val groups = remember(filteredTransactions) {
+                    val sdf = SimpleDateFormat("d 'de' MMMM 'de' yyyy", Locale("pt", "MZ"))
+                    val cal = Calendar.getInstance()
+                    filteredTransactions.groupBy { tx ->
+                        cal.timeInMillis = tx.date
+                        cal.get(Calendar.YEAR) to cal.get(Calendar.DAY_OF_YEAR)
+                    }.map { (_, txs) ->
+                        TransactionGroup(
+                            dateLabel = sdf.format(Date(txs.first().date)),
+                            transactions = txs
+                        )
+                    }.sortedByDescending { it.transactions.first().date }
+                }
+
+                groups.forEach { group ->
+                    item {
+                        Text(
+                            text = group.dateLabel,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                        )
+                    }
+                    items(group.transactions) { tx ->
+                        TransactionItem(tx = tx)
+                    }
                 }
             }
         }
     }
 
-    if (showTopBar) {
-        Scaffold(
-            topBar = {
+    Scaffold(
+        topBar = {
+            if (showTopBar) {
                 TopAppBar(
                     title = {
                         Row(
@@ -601,32 +455,473 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.background
                     )
                 )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = onNavigateToNewTransaction,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier
-                        .padding(bottom = 16.dp, end = 8.dp)
-                        .testTag("add_transaction_fab")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Nova Transa\u00e7\u00e3o",
-                        modifier = Modifier.size(24.dp)
+            }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showTransactionDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape,
+                modifier = Modifier
+                    .size(64.dp)
+                    .testTag("add_transaction_fab")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Nova Transa\u00e7\u00e3o",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            content()
+        }
+    }
+
+    if (showTransactionDialog) {
+        TransactionDialog(
+            viewModel = viewModel,
+            onDismiss = { showTransactionDialog = false }
+        )
+    }
+}
+
+data class TransactionGroup(
+    val dateLabel: String,
+    val transactions: List<Transaction>
+)
+
+@Composable
+private fun SummaryFilterRow(
+    selectedFilter: Int,
+    onFilterSelected: (Int) -> Unit
+) {
+    val filters = listOf("Tudo", "7d", "15d", "30d")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        filters.forEachIndexed { index, label ->
+            val isSelected = selectedFilter == index
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.primary
+                        else Color.Transparent
                     )
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.background
-        ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                content()
+                    .clickable { onFilterSelected(index) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                )
             }
         }
-    } else {
-        content()
+    }
+}
+
+@Composable
+private fun SmallMetricCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    value: String,
+    color: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(color.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                color = color,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun IncomeExpenseChart(
+    transactions: List<Transaction>,
+    filter: Int
+) {
+    val cal = Calendar.getInstance()
+    val now = System.currentTimeMillis()
+
+    val dailyData = remember(transactions, filter) {
+        val days = when (filter) {
+            1 -> 7
+            2 -> 15
+            3 -> 30
+            else -> 7
+        }
+        val bars = mutableListOf<Pair<String, Double, Double>>()
+        val sdf = SimpleDateFormat("dd/MM", Locale("pt", "MZ"))
+        for (i in days - 1 downTo 0) {
+            cal.timeInMillis = now
+            cal.add(Calendar.DAY_OF_MONTH, -i)
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            val dayStart = cal.timeInMillis
+            cal.add(Calendar.DAY_OF_MONTH, 1)
+            val dayEnd = cal.timeInMillis
+            val inc = transactions.filter { it.date in dayStart until dayEnd && it.type == "RECEITA" }.sumOf { it.amount }
+            val exp = transactions.filter { it.date in dayStart until dayEnd && it.type == "DESPESA" }.sumOf { it.amount }
+            bars.add(Triple(sdf.format(Date(dayStart)), inc, exp))
+        }
+        bars
+    }
+
+    val maxVal = dailyData.maxOfOrNull { maxOf(it.second, it.third) }?.coerceAtLeast(1.0) ?: 1.0
+
+    val animatedIncFactors = dailyData.mapIndexed { index, (_, inc, _) ->
+        val anim by animateFloatAsState(
+            targetValue = (inc / maxVal).toFloat().coerceIn(0f, 1f),
+            animationSpec = tween(600, delayMillis = index * 50),
+            label = "incBar_$index"
+        )
+        anim
+    }
+    val animatedExpFactors = dailyData.mapIndexed { index, (_, _, exp) ->
+        val anim by animateFloatAsState(
+            targetValue = (exp / maxVal).toFloat().coerceIn(0f, 1f),
+            animationSpec = tween(600, delayMillis = index * 50),
+            label = "expBar_$index"
+        )
+        anim
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Entradas vs Gastos",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            val incomeColor = Color(0xFF15803D)
+            val expenseColor = MaterialTheme.colorScheme.error
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+            ) {
+                val w = size.width
+                val h = size.height
+                val barCount = dailyData.size
+                val totalGap = (barCount - 1) * 6f
+                val barWidth = ((w - totalGap) / barCount) * 0.65f
+                val halfBar = barWidth / 2f
+                val chartTop = h * 0.1f
+                val chartHeight = h * 0.8f
+
+                drawLine(
+                    color = Color.Gray.copy(alpha = 0.2f),
+                    start = Offset(0f, h * 0.9f),
+                    end = Offset(w, h * 0.9f),
+                    strokeWidth = 1f
+                )
+
+                dailyData.forEachIndexed { index, _ ->
+                    val x = index * (barWidth + 6f)
+                    val incHeight = animatedIncFactors[index] * chartHeight
+                    val expHeight = animatedExpFactors[index] * chartHeight
+                    val baseY = h * 0.9f
+
+                    if (incHeight > 0f) {
+                        drawRect(
+                            color = incomeColor,
+                            topLeft = Offset(x, baseY - incHeight),
+                            size = Size(halfBar, incHeight)
+                        )
+                    }
+                    if (expHeight > 0f) {
+                        drawRect(
+                            color = expenseColor,
+                            topLeft = Offset(x + halfBar, baseY - expHeight),
+                            size = Size(halfBar, expHeight)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(incomeColor))
+                        Text("Entradas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(expenseColor))
+                        Text("Gastos", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                val periodLabel = when (filter) {
+                    1 -> "\u00daltimos 7 dias"
+                    2 -> "\u00daltimos 15 dias"
+                    3 -> "\u00daltimos 30 dias"
+                    else -> "\u00daltimos 7 dias"
+                }
+                Text(periodLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpenseCategoryChart(
+    transactions: List<Transaction>,
+    numberFormat: NumberFormat
+) {
+    val expenses = transactions.filter { it.type == "DESPESA" }
+    val totalExpenseAmount = expenses.sumOf { it.amount }
+
+    val categoryData = remember(expenses) {
+        val cats = linkedMapOf(
+            "Compras" to 0.0,
+            "Alimenta\u00e7\u00e3o" to 0.0,
+            "Transporte" to 0.0,
+            "Outros" to 0.0
+        )
+        expenses.forEach { tx ->
+            val key = if (cats.containsKey(tx.category)) tx.category else "Outros"
+            cats[key] = (cats[key] ?: 0.0) + tx.amount
+        }
+        cats.filter { it.value > 0.0 }
+    }
+
+    val categoryColors = listOf(
+        Color(0xFF15803D),
+        MaterialTheme.colorScheme.error,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.secondary
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Gastos por Categoria",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (totalExpenseAmount <= 0) {
+                Text(
+                    text = "Nenhum gasto registrado",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 20.dp).fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                val categoryList = categoryData.toList()
+
+                val animatedSweeps = categoryList.mapIndexed { index, (_, amount) ->
+                    val sweep by animateFloatAsState(
+                        targetValue = (amount / totalExpenseAmount * 360f).toFloat().coerceAtLeast(0.5f),
+                        animationSpec = tween(800, delayMillis = index * 100),
+                        label = "pieSweep_$index"
+                    )
+                    sweep
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val strokeWidth = 22.dp
+
+                    Canvas(modifier = Modifier.size(150.dp)) {
+                        val canvasSize = this.size
+                        val d = minOf(canvasSize.width, canvasSize.height)
+                        val topLeft = Offset(
+                            (canvasSize.width - d) / 2f,
+                            (canvasSize.height - d) / 2f
+                        )
+                        val arcSize = d
+
+                        drawCircle(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            style = Stroke(width = strokeWidth.toPx())
+                        )
+
+                        var startAngle = -90f
+                        categoryList.forEachIndexed { i, _ ->
+                            val sweep = animatedSweeps[i]
+                            drawArc(
+                                color = categoryColors[i % categoryColors.size],
+                                startAngle = startAngle,
+                                sweepAngle = sweep,
+                                useCenter = false,
+                                topLeft = topLeft,
+                                size = Size(arcSize, arcSize),
+                                style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Butt)
+                            )
+                            startAngle += sweep
+                        }
+                    }
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = formatKValue(totalExpenseAmount),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "TOTAL",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                categoryList.forEachIndexed { index, (category, amount) ->
+                    val fraction = (amount / totalExpenseAmount).toFloat()
+                    val color = categoryColors[index % categoryColors.size]
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(color)
+                        )
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = category,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${"%.1f".format(fraction * 100)}%",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            val animatedProgress by animateFloatAsState(
+                                targetValue = fraction,
+                                animationSpec = tween(600, delayMillis = index * 100),
+                                label = "progress_$index"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(animatedProgress)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(color)
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = numberFormat.format(amount) + " MT",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -674,7 +969,7 @@ fun TransactionItem(tx: Transaction) {
 
                 val isReceita = tx.type == "RECEITA"
                 val (iconBg, iconColor) = if (isReceita) {
-                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.secondary
+                    Color(0xFF15803D).copy(alpha = 0.12f) to Color(0xFF15803D)
                 } else {
                     MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f) to MaterialTheme.colorScheme.error
                 }
@@ -721,7 +1016,7 @@ fun TransactionItem(tx: Transaction) {
                 verticalArrangement = Arrangement.Center
             ) {
                 val prefix = if (tx.type == "RECEITA") "+ " else "- "
-                val color = if (tx.type == "RECEITA") MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
+                val color = if (tx.type == "RECEITA") Color(0xFF15803D) else MaterialTheme.colorScheme.onSurface
 
                 Text(
                     text = prefix + numberFormat.format(tx.amount) + " MT",

@@ -40,7 +40,6 @@ enum class BizTab(
 ) {
     PESSOAL("pessoal", "Pessoal", Icons.Filled.Person, Icons.Outlined.Person),
     BUSINESS("business", "Business", Icons.Filled.Business, Icons.Outlined.Business),
-    ADD("add", "", Icons.Filled.Add, Icons.Filled.Add),
     RESUMO("resumo", "Resumo", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
     DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings)
 }
@@ -96,18 +95,16 @@ fun BusinessOrchestrator(
     viewModel: BusinessViewModel
 ) {
     var activeTab by remember { mutableStateOf(BizTab.PESSOAL) }
-    var isAddingTransaction by remember { mutableStateOf(false) }
     var activeBlock by remember { mutableStateOf<BusinessBlock?>(null) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
 
-    val activeSubScreen = activeBlock != null || isAddingTransaction || showAccountDetail || showSecurity || showExport
+    val activeSubScreen = activeBlock != null || showAccountDetail || showSecurity || showExport
 
     BackHandler(enabled = activeSubScreen) {
         when {
             activeBlock != null -> activeBlock = null
-            isAddingTransaction -> isAddingTransaction = false
             showAccountDetail -> showAccountDetail = false
             showSecurity -> showSecurity = false
             showExport -> showExport = false
@@ -131,65 +128,40 @@ fun BusinessOrchestrator(
             }
         },
         bottomBar = {
-            if (!isAddingTransaction && !activeSubScreen) {
+            if (!activeSubScreen) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp
                 ) {
-                    BizTab.entries.forEachIndexed { index, tab ->
+                    BizTab.entries.forEach { tab ->
                         val isSelected = activeTab == tab
-
-                        if (tab == BizTab.ADD) {
-                            NavigationBarItem(
-                                selected = isSelected,
-                                onClick = { isAddingTransaction = true },
-                                icon = {
-                                    Box(
-                                        modifier = Modifier.size(36.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Add,
-                                            contentDescription = "Nova Transa\u00e7\u00e3o",
-                                            modifier = Modifier.size(24.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                },
-                                label = { Text("") },
-                                colors = NavigationBarItemDefaults.colors(
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
+                        NavigationBarItem(
+                            selected = isSelected,
+                            onClick = { activeTab = tab },
+                            icon = {
+                                Icon(
+                                    if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                                    contentDescription = tab.title,
+                                    modifier = Modifier.size(22.dp)
                                 )
-                            )
-                        } else {
-                            NavigationBarItem(
-                                selected = isSelected,
-                                onClick = { activeTab = tab },
-                                icon = {
-                                    Icon(
-                                        if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                                        contentDescription = tab.title,
-                                        modifier = Modifier.size(22.dp)
+                            },
+                            label = {
+                                Text(
+                                    tab.title,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        fontSize = 10.sp
                                     )
-                                },
-                                label = {
-                                    Text(
-                                        tab.title,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                            fontSize = 10.sp
-                                        )
-                                    )
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
-                        }
+                        )
                     }
                 }
             }
@@ -201,12 +173,6 @@ fun BusinessOrchestrator(
                 .padding(innerPadding)
         ) {
             when {
-                isAddingTransaction -> {
-                    NewTransactionScreen(
-                        viewModel = viewModel,
-                        onNavigateBack = { isAddingTransaction = false }
-                    )
-                }
                 activeBlock != null -> {
                     BusinessBlockContent(
                         block = activeBlock!!,
@@ -234,10 +200,7 @@ fun BusinessOrchestrator(
                 else -> {
                     when (activeTab) {
                         BizTab.PESSOAL -> {
-                            ProFinances(
-                                viewModel = viewModel,
-                                onNavigateToNewTransaction = { isAddingTransaction = true }
-                            )
+                            ProFinances(viewModel = viewModel)
                         }
                         BizTab.BUSINESS -> {
                             BusinessBlocksScreen(
@@ -245,12 +208,13 @@ fun BusinessOrchestrator(
                                 onBlockClick = { activeBlock = it }
                             )
                         }
-                        BizTab.ADD -> {}
                         BizTab.RESUMO -> {
-                            BusinessDashboardScreen(
-                                viewModel = viewModel,
-                                onNewSale = { activeBlock = BusinessBlock.VENDAS }
-                            )
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                HomeScreen(
+                                    viewModel = viewModel,
+                                    onNavigateToHistory = { activeTab = BizTab.PESSOAL }
+                                )
+                            }
                         }
                         BizTab.DEFINICOES -> {
                             ProfileScreen(
@@ -265,6 +229,7 @@ fun BusinessOrchestrator(
             }
         }
     }
+
 }
 
 @Composable
@@ -285,8 +250,7 @@ fun BusinessBlockContent(
 
 @Composable
 fun ProFinances(
-    viewModel: FinanceViewModel,
-    onNavigateToNewTransaction: () -> Unit
+    viewModel: FinanceViewModel
 ) {
     var activeProTab by remember { mutableStateOf(0) }
     val userName by viewModel.userName.collectAsState()
@@ -338,7 +302,6 @@ fun ProFinances(
             when (activeProTab) {
                 0 -> HomeScreen(
                     viewModel = viewModel,
-                    onNavigateToNewTransaction = onNavigateToNewTransaction,
                     onNavigateToHistory = { activeProTab = 1 },
                     showTopBar = false
                 )

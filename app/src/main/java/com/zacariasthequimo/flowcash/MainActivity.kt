@@ -83,16 +83,14 @@ fun AppOrchestrator(
     viewModel: FinanceViewModel
 ) {
     var activeTab by remember { mutableStateOf(BottomNavTab.HOME) }
-    var isAddingTransaction by remember { mutableStateOf(false) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
 
-    val activeSubScreen = isAddingTransaction || showAccountDetail || showSecurity || showExport
+    val activeSubScreen = showAccountDetail || showSecurity || showExport
 
     BackHandler(enabled = activeSubScreen) {
         when {
-            isAddingTransaction -> isAddingTransaction = false
             showAccountDetail -> showAccountDetail = false
             showSecurity -> showSecurity = false
             showExport -> showExport = false
@@ -101,7 +99,7 @@ fun AppOrchestrator(
 
     Scaffold(
         bottomBar = {
-            if (!isAddingTransaction && !activeSubScreen) {
+            if (!activeSubScreen) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp,
@@ -146,15 +144,9 @@ fun AppOrchestrator(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (isAddingTransaction) 0.dp else innerPadding.calculateBottomPadding())
+                .padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             when {
-                isAddingTransaction -> {
-                    NewTransactionScreen(
-                        viewModel = viewModel,
-                        onNavigateBack = { isAddingTransaction = false }
-                    )
-                }
                 showAccountDetail -> {
                     AccountDetailScreen(
                         viewModel = viewModel,
@@ -178,7 +170,6 @@ fun AppOrchestrator(
                         BottomNavTab.HOME -> {
                             HomeScreen(
                                 viewModel = viewModel,
-                                onNavigateToNewTransaction = { isAddingTransaction = true },
                                 onNavigateToHistory = { activeTab = BottomNavTab.HISTORY }
                             )
                         }
