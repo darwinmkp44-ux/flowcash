@@ -1,20 +1,13 @@
 package com.zacariasthequimo.flowcash
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,7 +28,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.zacariasthequimo.flowcash.data.entity.Goal
 import com.zacariasthequimo.flowcash.ui.BusinessViewModel
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
-import com.zacariasthequimo.flowcash.ui.ThemeMode
 import com.zacariasthequimo.flowcash.ui.UserAvatar
 import com.zacariasthequimo.flowcash.ui.screens.*
 import com.zacariasthequimo.flowcash.ui.theme.MyApplicationTheme
@@ -72,17 +64,10 @@ class BusinessMainActivity : ComponentActivity() {
         val financeViewModel = businessViewModel as FinanceViewModel
 
         setContent {
-            val themeMode by financeViewModel.themeMode.collectAsState()
-            val systemDark = isSystemInDarkTheme()
-            val isDarkMode = when (themeMode) {
-                ThemeMode.SYSTEM -> systemDark
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
             var onboardingDone by remember { mutableStateOf(financeViewModel.isOnboardingComplete) }
             var notificationPermissionDone by remember { mutableStateOf(false) }
 
-            MyApplicationTheme(darkTheme = isDarkMode) {
+            MyApplicationTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -97,12 +82,7 @@ class BusinessMainActivity : ComponentActivity() {
                             onComplete = { notificationPermissionDone = true }
                         )
                     } else {
-                        BusinessOrchestrator(
-                            viewModel = businessViewModel,
-                            isDarkMode = isDarkMode,
-                            themeMode = themeMode,
-                            onSetThemeMode = { financeViewModel.setThemeMode(it) }
-                        )
+                        BusinessOrchestrator(viewModel = businessViewModel)
                     }
                 }
             }
@@ -113,10 +93,7 @@ class BusinessMainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BusinessOrchestrator(
-    viewModel: BusinessViewModel,
-    isDarkMode: Boolean,
-    themeMode: ThemeMode,
-    onSetThemeMode: (ThemeMode) -> Unit
+    viewModel: BusinessViewModel
 ) {
     var activeTab by remember { mutableStateOf(BizTab.PESSOAL) }
     var isAddingTransaction by remember { mutableStateOf(false) }
@@ -278,9 +255,6 @@ fun BusinessOrchestrator(
                         BizTab.DEFINICOES -> {
                             ProfileScreen(
                                 viewModel = viewModel,
-                                isDarkMode = isDarkMode,
-                                themeMode = themeMode,
-                                onSetThemeMode = onSetThemeMode,
                                 onNavigateToAccount = { showAccountDetail = true },
                                 onNavigateToSecurity = { showSecurity = true },
                                 onNavigateToExport = { showExport = true }

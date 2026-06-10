@@ -11,7 +11,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -29,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
-import com.zacariasthequimo.flowcash.ui.ThemeMode
 import com.zacariasthequimo.flowcash.ui.screens.*
 import com.zacariasthequimo.flowcash.ui.theme.MyApplicationTheme
 
@@ -41,17 +39,10 @@ class MainActivity : ComponentActivity() {
         val viewModel = ViewModelProvider(this)[FinanceViewModel::class.java]
 
         setContent {
-            val themeMode by viewModel.themeMode.collectAsState()
-            val systemDark = isSystemInDarkTheme()
-            val isDarkMode = when (themeMode) {
-                ThemeMode.SYSTEM -> systemDark
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
             var onboardingDone by remember { mutableStateOf(viewModel.isOnboardingComplete) }
             var notificationPermissionDone by remember { mutableStateOf(false) }
 
-            MyApplicationTheme(darkTheme = isDarkMode) {
+            MyApplicationTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -66,12 +57,7 @@ class MainActivity : ComponentActivity() {
                             onComplete = { notificationPermissionDone = true }
                         )
                     } else {
-                        AppOrchestrator(
-                            viewModel = viewModel,
-                            isDarkMode = isDarkMode,
-                            themeMode = themeMode,
-                            onSetThemeMode = { viewModel.setThemeMode(it) }
-                        )
+                        AppOrchestrator(viewModel = viewModel)
                     }
                 }
             }
@@ -94,10 +80,7 @@ enum class BottomNavTab(
 
 @Composable
 fun AppOrchestrator(
-    viewModel: FinanceViewModel,
-    isDarkMode: Boolean,
-    themeMode: ThemeMode,
-    onSetThemeMode: (ThemeMode) -> Unit
+    viewModel: FinanceViewModel
 ) {
     var activeTab by remember { mutableStateOf(BottomNavTab.HOME) }
     var isAddingTransaction by remember { mutableStateOf(false) }
@@ -217,9 +200,6 @@ fun AppOrchestrator(
                         BottomNavTab.PROFILE -> {
                             ProfileScreen(
                                 viewModel = viewModel,
-                                isDarkMode = isDarkMode,
-                                themeMode = themeMode,
-                                onSetThemeMode = onSetThemeMode,
                                 onNavigateToAccount = { showAccountDetail = true },
                                 onNavigateToSecurity = { showSecurity = true },
                                 onNavigateToExport = { showExport = true }

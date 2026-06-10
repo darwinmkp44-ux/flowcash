@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.zacariasthequimo.flowcash.BuildConfig
 import com.zacariasthequimo.flowcash.ui.FinanceViewModel
-import com.zacariasthequimo.flowcash.ui.ThemeMode
 import com.zacariasthequimo.flowcash.ui.UserAvatar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -38,9 +37,6 @@ import androidx.compose.ui.layout.ContentScale
 @Composable
 fun ProfileScreen(
     viewModel: FinanceViewModel,
-    isDarkMode: Boolean,
-    themeMode: ThemeMode,
-    onSetThemeMode: (ThemeMode) -> Unit,
     onNavigateToAccount: () -> Unit = {},
     onNavigateToSecurity: () -> Unit = {},
     onNavigateToExport: () -> Unit = {}
@@ -245,69 +241,6 @@ fun ProfileScreen(
                                 ),
                                 modifier = Modifier.testTag("notifications_switch")
                             )
-                        }
-                    }
-
-                    // Item: Theme Selector (Sistema / Claro / Escuro)
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isDarkMode) Icons.Outlined.DarkMode else Icons.Outlined.LightMode,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                                Text(
-                                    text = "Tema",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                ThemeMode.entries.forEach { mode ->
-                                    val isSelected = themeMode == mode
-                                    val label = when (mode) {
-                                        ThemeMode.SYSTEM -> "Sistema"
-                                        ThemeMode.LIGHT -> "Claro"
-                                        ThemeMode.DARK -> "Escuro"
-                                    }
-                                    FilterChip(
-                                        selected = isSelected,
-                                        onClick = { onSetThemeMode(mode) },
-                                        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                        ),
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
                         }
                     }
 

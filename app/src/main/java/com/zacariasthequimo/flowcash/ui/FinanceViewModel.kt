@@ -19,8 +19,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class ThemeMode { SYSTEM, LIGHT, DARK }
-
 open class FinanceViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
@@ -43,17 +41,6 @@ open class FinanceViewModel(application: Application) : AndroidViewModel(applica
             .apply()
         _userName.value = name
         _userEmail.value = email
-    }
-
-    // Theme preference
-    private val _themeMode = MutableStateFlow(
-        ThemeMode.valueOf(sharedPrefs.getString("theme_mode", ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name)
-    )
-    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
-
-    fun setThemeMode(mode: ThemeMode) {
-        sharedPrefs.edit().putString("theme_mode", mode.name).apply()
-        _themeMode.value = mode
     }
 
     // Onboarding state
