@@ -383,19 +383,17 @@ fun HomeScreen(
                     }
                 }
             } else {
-                val groups = remember(filteredTransactions) {
-                    val sdf = SimpleDateFormat("d 'de' MMMM 'de' yyyy", Locale("pt", "MZ"))
-                    val cal = Calendar.getInstance()
-                    filteredTransactions.groupBy { tx ->
-                        cal.timeInMillis = tx.date
-                        cal.get(Calendar.YEAR) to cal.get(Calendar.DAY_OF_YEAR)
-                    }.map { (_, txs) ->
-                        TransactionGroup(
-                            dateLabel = sdf.format(Date(txs.first().date)),
-                            transactions = txs
-                        )
-                    }.sortedByDescending { it.transactions.first().date }
-                }
+                val sdf = SimpleDateFormat("d 'de' MMMM 'de' yyyy", Locale("pt", "MZ"))
+                val cal = Calendar.getInstance()
+                val groups = filteredTransactions.groupBy { tx ->
+                    cal.timeInMillis = tx.date
+                    cal.get(Calendar.YEAR) to cal.get(Calendar.DAY_OF_YEAR)
+                }.map { (_, txs) ->
+                    TransactionGroup(
+                        dateLabel = sdf.format(Date(txs.first().date)),
+                        transactions = txs
+                    )
+                }.sortedByDescending { it.transactions.first().date }
 
                 groups.forEach { group ->
                     item {
@@ -603,7 +601,7 @@ private fun IncomeExpenseChart(
             3 -> 30
             else -> 7
         }
-        val bars = mutableListOf<Pair<String, Double, Double>>()
+        val bars = mutableListOf<Triple<String, Double, Double>>()
         val sdf = SimpleDateFormat("dd/MM", Locale("pt", "MZ"))
         for (i in days - 1 downTo 0) {
             cal.timeInMillis = now
@@ -798,14 +796,15 @@ private fun ExpenseCategoryChart(
                     sweep
                 }
 
+                val strokeWidthPx = 22.dp
+                val bgCircleColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    val strokeWidth = 22.dp
-
                     Canvas(modifier = Modifier.size(150.dp)) {
                         val canvasSize = this.size
                         val d = minOf(canvasSize.width, canvasSize.height)
@@ -814,10 +813,11 @@ private fun ExpenseCategoryChart(
                             (canvasSize.height - d) / 2f
                         )
                         val arcSize = d
+                        val sw = strokeWidthPx.toPx()
 
                         drawCircle(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
-                            style = Stroke(width = strokeWidth.toPx())
+                            color = bgCircleColor,
+                            style = Stroke(width = sw)
                         )
 
                         var startAngle = -90f
@@ -830,7 +830,7 @@ private fun ExpenseCategoryChart(
                                 useCenter = false,
                                 topLeft = topLeft,
                                 size = Size(arcSize, arcSize),
-                                style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Butt)
+                                style = Stroke(width = sw, cap = StrokeCap.Butt)
                             )
                             startAngle += sweep
                         }
