@@ -77,6 +77,28 @@ git push origin v1.0.0
 
 ---
 
+## 📸 Screenshots
+
+<div align="center">
+  <img alt="Pro Home" src="screenshots/pro_home.png" width="30%" />
+  <img alt="Pro Resumo" src="screenshots/pro_resumo.png" width="30%" />
+  <img alt="Transaction Dialog" src="screenshots/transaction_dialog.png" width="30%" />
+</div>
+
+<div align="center">
+  <img alt="Business Home" src="screenshots/business_home.png" width="30%" />
+  <img alt="Business Resumo" src="screenshots/business_resumo.png" width="30%" />
+  <img alt="Gasto Dialog" src="screenshots/transaction_dialog_despesa.png" width="30%" />
+</div>
+
+- **Pro Home** — Bottom nav com botão ADD central, lista de transações agrupadas por data
+- **Pro Resumo** — Cards de métricas, gráfico de barras entradas vs gastos, gráfico de rosca por categoria
+- **Business Home** — Nav com PESSOAL em primeiro lugar, mesma estrutura do Pro
+- **Business Resumo** — Charts financeiros com ADD no canto direito da navbar
+- **Transaction Dialog** — Pop-up ADD: passo 0 (escolher Receita/Gasto) e passo 1 (nome + valor)
+
+---
+
 ## 📁 Estrutura do Código
 ```
 ├── .github/workflows/      # Configuração do Pipeline CI/CD (GitHub Actions)
