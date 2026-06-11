@@ -45,7 +45,6 @@ enum class BizTab(
     val activeIcon: ImageVector,
     val inactiveIcon: ImageVector
 ) {
-    PESSOAL("pessoal", "Pessoal", Icons.Filled.Person, Icons.Outlined.Person),
     BUSINESS("business", "Business", Icons.Filled.Business, Icons.Outlined.Business),
     RESUMO("resumo", "Resumo", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
     DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings)
@@ -101,7 +100,7 @@ class BusinessMainActivity : ComponentActivity() {
 fun BusinessOrchestrator(
     viewModel: BusinessViewModel
 ) {
-    var activeTab by remember { mutableStateOf(BizTab.PESSOAL) }
+    var activeTab by remember { mutableStateOf(BizTab.BUSINESS) }
     var activeBlock by remember { mutableStateOf<BusinessBlock?>(null) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
@@ -139,7 +138,11 @@ fun BusinessOrchestrator(
         },
         bottomBar = {
             if (!activeSubScreen) {
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(
+                        WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+                    )) {
                     Surface(
                         color = MaterialTheme.colorScheme.surface,
                         tonalElevation = 0.dp,
@@ -255,9 +258,6 @@ fun BusinessOrchestrator(
                 }
                 else -> {
                     when (activeTab) {
-                        BizTab.PESSOAL -> {
-                            ProFinances(viewModel = viewModel)
-                        }
                         BizTab.BUSINESS -> {
                             BusinessBlocksScreen(
                                 viewModel = viewModel,

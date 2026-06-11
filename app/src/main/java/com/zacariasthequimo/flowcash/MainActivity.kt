@@ -112,7 +112,11 @@ fun AppOrchestrator(
     Scaffold(
         bottomBar = {
             if (!activeSubScreen) {
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(
+                        WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+                    )) {
                     Surface(
                         color = MaterialTheme.colorScheme.surface,
                         tonalElevation = 0.dp,
@@ -203,7 +207,7 @@ fun AppOrchestrator(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
+                .padding(innerPadding)
         ) {
             when {
                 showAccountDetail -> {
