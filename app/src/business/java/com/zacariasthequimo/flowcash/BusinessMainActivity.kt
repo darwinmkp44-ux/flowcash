@@ -9,10 +9,8 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.Icons
@@ -26,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,8 +42,9 @@ enum class BizTab(
     val activeIcon: ImageVector,
     val inactiveIcon: ImageVector
 ) {
+    HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
     BUSINESS("business", "Business", Icons.Filled.Business, Icons.Outlined.Business),
-    RESUMO("resumo", "Resumo", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
+    ESTATISTICAS("estatisticas", "Estat\u00edsticas", Icons.Filled.BarChart, Icons.Outlined.BarChart),
     DEFINICOES("definicoes", "Defini\u00e7\u00f5es", Icons.Filled.Settings, Icons.Outlined.Settings)
 }
 
@@ -100,12 +98,11 @@ class BusinessMainActivity : ComponentActivity() {
 fun BusinessOrchestrator(
     viewModel: BusinessViewModel
 ) {
-    var activeTab by remember { mutableStateOf(BizTab.BUSINESS) }
+    var activeTab by remember { mutableStateOf(BizTab.HOME) }
     var activeBlock by remember { mutableStateOf<BusinessBlock?>(null) }
     var showAccountDetail by remember { mutableStateOf(false) }
     var showSecurity by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
-    var showTransactionDialog by remember { mutableStateOf(false) }
 
     val activeSubScreen = activeBlock != null || showAccountDetail || showSecurity || showExport
 
@@ -153,7 +150,7 @@ fun BusinessOrchestrator(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(64.dp)
-                                .padding(start = 4.dp, end = 68.dp),
+                                .padding(horizontal = 4.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -201,26 +198,6 @@ fun BusinessOrchestrator(
                             }
                         }
                     }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .offset(x = (-12).dp, y = (-25).dp)
-                            .size(64.dp)
-                            .shadow(12.dp, CircleShape)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable { showTransactionDialog = true }
-                            .testTag("add_button_nav"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Nova Transa\u00e7\u00e3o",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
                 }
             }
         },
@@ -258,16 +235,21 @@ fun BusinessOrchestrator(
                 }
                 else -> {
                     when (activeTab) {
+                        BizTab.HOME -> {
+                            BusinessHomeScreen(
+                                viewModel = viewModel,
+                                onNavigateToBlock = { activeBlock = it }
+                            )
+                        }
                         BizTab.BUSINESS -> {
                             BusinessBlocksScreen(
                                 viewModel = viewModel,
                                 onBlockClick = { activeBlock = it }
                             )
                         }
-                        BizTab.RESUMO -> {
-                            ResumoScreen(
-                                viewModel = viewModel,
-                                showTopBar = false
+                        BizTab.ESTATISTICAS -> {
+                            BusinessEstatisticasScreen(
+                                viewModel = viewModel
                             )
                         }
                         BizTab.DEFINICOES -> {
@@ -283,14 +265,6 @@ fun BusinessOrchestrator(
             }
         }
     }
-
-    if (showTransactionDialog) {
-        TransactionDialog(
-            viewModel = viewModel,
-            onDismiss = { showTransactionDialog = false }
-        )
-    }
-
 }
 
 @Composable
@@ -349,7 +323,7 @@ fun ProFinances(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val tabs = listOf("Home", "Hist\u00f3rico", "Metas", "Gr\u00e1ficos")
+            val tabs = listOf("Home", "Resumo", "Metas", "Gr\u00e1ficos")
             tabs.forEachIndexed { i, title ->
                 FilterChip(
                     selected = activeProTab == i,
@@ -366,7 +340,7 @@ fun ProFinances(
                     onNavigateToHistory = { activeProTab = 1 },
                     showTopBar = false
                 )
-                1 -> HistoryScreen(
+                1 -> ResumoScreen(
                     viewModel = viewModel,
                     showTopBar = false
                 )
@@ -374,7 +348,7 @@ fun ProFinances(
                     viewModel = viewModel,
                     showTopBar = false
                 )
-                 3 -> ResumoScreen(
+                3 -> AnalyticsScreen(
                     viewModel = viewModel,
                     showTopBar = false
                 )

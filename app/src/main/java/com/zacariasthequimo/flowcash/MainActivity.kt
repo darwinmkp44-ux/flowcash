@@ -16,9 +16,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -76,14 +72,13 @@ class MainActivity : ComponentActivity() {
 enum class ProTab(
     val route: String,
     val title: String,
-    val activeIcon: ImageVector,
-    val inactiveIcon: ImageVector
+    val emoji: String
 ) {
-    HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
-    HISTORY("history", "Hist\u00f3rico", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
-    ESTATISTICAS("estatisticas", "Estat\u00edsticas", Icons.Filled.Leaderboard, Icons.Outlined.Leaderboard),
-    GOALS("goals", "Metas", Icons.Filled.TrackChanges, Icons.Outlined.TrackChanges),
-    PROFILE("profile", "Perfil", Icons.Filled.Person, Icons.Outlined.Person)
+    HOME("home", "Home", "\uD83C\uDFE0"),
+    RESUMO("resumo", "Resumo", "\uD83D\uDCCA"),
+    ESTATISTICAS("estatisticas", "Estat\u00edsticas", "\uD83D\uDCC8"),
+    GOALS("goals", "Metas", "\uD83C\uDFAF"),
+    PROFILE("profile", "Perfil", "\uD83D\uDC64")
 }
 
 @Composable
@@ -146,7 +141,7 @@ fun AppOrchestrator(
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .size(24.dp)
+                                                .size(28.dp)
                                                 .clip(RoundedCornerShape(6.dp))
                                                 .background(
                                                     if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
@@ -154,12 +149,9 @@ fun AppOrchestrator(
                                                 ),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
-                                                contentDescription = tab.title,
-                                                tint = if (isSelected) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                                modifier = Modifier.size(22.dp)
+                                            Text(
+                                                text = tab.emoji,
+                                                fontSize = 18.sp
                                             )
                                         }
                                         Spacer(modifier = Modifier.height(2.dp))
@@ -192,11 +184,11 @@ fun AppOrchestrator(
                             .testTag("add_button_nav"),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Nova Transa\u00e7\u00e3o",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(32.dp)
+                        Text(
+                            text = "+",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Light
                         )
                     }
                 }
@@ -233,16 +225,16 @@ fun AppOrchestrator(
                         ProTab.HOME -> {
                             HomeScreen(
                                 viewModel = viewModel,
-                                onNavigateToHistory = { activeTab = ProTab.HISTORY }
+                                onNavigateToHistory = { activeTab = ProTab.RESUMO }
                             )
                         }
-                        ProTab.HISTORY -> {
-                            HistoryScreen(
+                        ProTab.RESUMO -> {
+                            ResumoScreen(
                                 viewModel = viewModel
                             )
                         }
                         ProTab.ESTATISTICAS -> {
-                            ResumoScreen(
+                            AnalyticsScreen(
                                 viewModel = viewModel
                             )
                         }
