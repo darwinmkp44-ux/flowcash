@@ -5,8 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -66,7 +68,8 @@ fun SaleScreen(
         if (showNewSale) {
             NewSaleSheet(
                 viewModel = viewModel,
-                onDismiss = { showNewSale = false }
+                onDismiss = { showNewSale = false },
+                innerPadding = innerPadding
             )
         } else if (sales.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
@@ -112,7 +115,8 @@ fun SaleScreen(
 @Composable
 private fun NewSaleSheet(
     viewModel: BusinessViewModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    innerPadding: androidx.compose.foundation.layout.PaddingValues = PaddingValues(0.dp)
 ) {
     val products by viewModel.products.collectAsState()
     val customers by viewModel.customers.collectAsState()
@@ -134,7 +138,7 @@ private fun NewSaleSheet(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp)
+        modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar") }
@@ -159,7 +163,9 @@ private fun NewSaleSheet(
         Box(modifier = Modifier.weight(1f)) {
             when (step) {
                 0 -> {
-                    Column {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    ) {
                         CustomerSelector(
                             customers = customers,
                             selectedCustomerId = selectedCustomerId,
@@ -191,7 +197,10 @@ private fun NewSaleSheet(
                         if (selectedItems.isEmpty()) {
                             Text("Nenhum produto selecionado", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         } else {
-                            LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
                                 items(selectedItems, key = { "${it.productId}_${it.name}" }) { item ->
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
@@ -215,10 +224,13 @@ private fun NewSaleSheet(
                     }
                 }
                 2 -> {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Método de Pagamento", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text("M\u00e9todo de Pagamento", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf("Dinheiro", "Cartão", "Transferência", "Outro").forEach { method ->
+                            listOf("Dinheiro", "Cart\u00e3o", "Transfer\u00eancia", "Outro").forEach { method ->
                                 FilterChip(
                                     selected = paymentMethod == method,
                                     onClick = { paymentMethod = method },
@@ -362,37 +374,79 @@ private fun ProductPickerDialog(
     onDismiss: () -> Unit,
     onSelect: (Product, Int) -> Unit
 ) {
+    var selectedProduct by remember { mutableStateOf<Product?>(null) }
     var qty by remember { mutableStateOf("1") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Selecionar Produto", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = qty,
-                    onValueChange = { qty = it },
-                    label = { Text("Quantidade") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                LazyColumn(modifier = Modifier.heightIn(max = 300.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    if (selectedProduct != null) {
+        val product = selectedProduct!!
+        AlertDialog(
+            onDismissRequest = { selectedProduct = null },
+            title = { Text(product.name, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Pre\u00e7o unit\u00e1rio: ${product.price} MT", style = MaterialTheme.typography.bodyMedium)
+                            Text("Stock: ${product.stockQty}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    OutlinedTextField(
+                        value = qty,
+                        onValueChange = { qty = it },
+                        label = { Text("Quantidade") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { onSelect(product, qty.toIntOrNull() ?: 1) },
+                    shape = RoundedCornerShape(10.dp)
+                ) { Text("Adicionar \u00e0 Venda") }
+            },
+            dismissButton = {
+                TextButton(onClick = { selectedProduct = null }) { Text("Voltar") }
+            },
+            shape = RoundedCornerShape(16.dp)
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Selecionar Produto", fontWeight = FontWeight.Bold) },
+            text = {
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 350.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     items(products) { product ->
-                        TextButton(
-                            onClick = { onSelect(product, qty.toIntOrNull() ?: 1) },
-                            modifier = Modifier.fillMaxWidth()
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clickable { selectedProduct = product },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                         ) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(product.name, fontWeight = FontWeight.SemiBold)
-                                Text("${product.price} MT", color = MaterialTheme.colorScheme.primary)
+                            Row(
+                                modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(product.name, fontWeight = FontWeight.SemiBold)
+                                    Text("Stock: ${product.stockQty}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Text("${product.price} MT", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
                 }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
-    )
+            },
+            confirmButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 }

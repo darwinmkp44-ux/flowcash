@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.zacariasthequimo.flowcash.data.entity.Customer
 import com.zacariasthequimo.flowcash.ui.BusinessViewModel
 import java.text.NumberFormat
@@ -298,62 +299,146 @@ private fun AddCustomerDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, String, String) -> Unit
 ) {
+    var step by remember { mutableStateOf(0) }
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
+    val steps = listOf("Informa\u00e7\u00f5es", "Contacto", "Observa\u00e7\u00f5es")
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Novo Cliente", fontWeight = FontWeight.SemiBold) },
+        title = {
+            Column {
+                Text("Novo Cliente", fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    steps.forEachIndexed { i, label ->
+                        FilterChip(
+                            selected = step == i,
+                            onClick = { },
+                            label = { Text(label, fontSize = 11.sp) },
+                            modifier = Modifier.weight(1f),
+                            enabled = false
+                        )
+                    }
+                }
+            }
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = name, onValueChange = { name = it },
-                    label = { Text("Nome *") }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                OutlinedTextField(
-                    value = email, onValueChange = { email = it },
-                    label = { Text("Email") }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                OutlinedTextField(
-                    value = phone, onValueChange = { phone = it },
-                    label = { Text("Telefone") }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                OutlinedTextField(
-                    value = address, onValueChange = { address = it },
-                    label = { Text("Endere\u00e7o") }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                OutlinedTextField(
-                    value = notes, onValueChange = { notes = it },
-                    label = { Text("Observa\u00e7\u00f5es") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    maxLines = 3
-                )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                when (step) {
+                    0 -> {
+                        OutlinedTextField(
+                            value = name, onValueChange = { name = it },
+                            label = { Text("Nome completo *") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        )
+                        OutlinedTextField(
+                            value = email, onValueChange = { email = it },
+                            label = { Text("Email") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            leadingIcon = { Icon(Icons.Outlined.Email, contentDescription = null) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        )
+                    }
+                    1 -> {
+                        OutlinedTextField(
+                            value = phone, onValueChange = { phone = it },
+                            label = { Text("Telefone") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            leadingIcon = { Icon(Icons.Outlined.Phone, contentDescription = null) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        )
+                        OutlinedTextField(
+                            value = address, onValueChange = { address = it },
+                            label = { Text("Endere\u00e7o") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            leadingIcon = { Icon(Icons.Outlined.LocationOn, contentDescription = null) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        )
+                    }
+                    2 -> {
+                        OutlinedTextField(
+                            value = notes, onValueChange = { notes = it },
+                            label = { Text("Observa\u00e7\u00f5es") },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            maxLines = 5,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text("Resumo", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                                Spacer(Modifier.height(6.dp))
+                                Text("Nome: ${name.ifBlank { "---" }}", style = MaterialTheme.typography.bodySmall)
+                                Text("Email: ${email.ifBlank { "---" }}", style = MaterialTheme.typography.bodySmall)
+                                Text("Telefone: ${phone.ifBlank { "---" }}", style = MaterialTheme.typography.bodySmall)
+                                Text("Endere\u00e7o: ${address.ifBlank { "---" }}", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    if (name.isNotBlank()) onConfirm(name, email, phone, address, notes)
-                },
-                enabled = name.isNotBlank(),
-                shape = RoundedCornerShape(10.dp)
-            ) { Text("Adicionar") }
+            if (step < 2) {
+                Button(
+                    onClick = { step++ },
+                    enabled = if (step == 0) name.isNotBlank() else true,
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Pr\u00f3ximo") }
+            } else {
+                Button(
+                    onClick = { if (name.isNotBlank()) onConfirm(name, email, phone, address, notes) },
+                    enabled = name.isNotBlank(),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Adicionar") }
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            if (step > 0) {
+                TextButton(onClick = { step-- }) { Text("Anterior") }
+            } else {
+                TextButton(onClick = onDismiss) { Text("Cancelar") }
+            }
         },
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp)
     )
 }
